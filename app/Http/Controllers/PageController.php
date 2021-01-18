@@ -6,7 +6,8 @@ use App\Models\Location;
 
 class PageController extends Controller
 {
-    const GLOBAL = 'ALL';
+    const ALL = 'ALL';
+    const GLOBAL = 'World Wide';
 
     /**
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
@@ -15,9 +16,9 @@ class PageController extends Controller
     {
         $location = Location::getUserLocation();
         $countryName = Location::validateCountryName($location) ? $location->countryName : self::GLOBAL;
-        $searchName = $countryName !== self::GLOBAL ? Location::formatCountryName($countryName) : self::GLOBAL;
+        $searchName = $countryName !== self::GLOBAL ? Location::formatCountryName($countryName) : self::ALL;
 
-        $code = $location ? $location->countryCode : null;
+        $code = $location && $countryName !== self::ALL ? $location->countryCode : null;
 
         return view('index')
             ->withCountry($countryName)

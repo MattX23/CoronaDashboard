@@ -2,37 +2,35 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Enums\APIEnums;
+use App\Http\Contracts\CovidStatisticsContract;
 use App\Structs\StatisticsResultStruct;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Http;
 
 class StatisticsController extends Controller
 {
     /**
-     * @param string|null $country
-     * @param string|null $date
+     * @param \App\Http\Contracts\CovidStatisticsContract $covidStatisticsService
+     * @param string|null                                 $country
+     * @param string|null                                 $date
      *
      * @return string
      */
-    public function getStatsByCountryAndDate(string $country, string $date = null): string
-    {
+    public function getStatsByCountryAndDate(
+        CovidStatisticsContract $covidStatisticsService,
+        string $country,
+        string $date = null
+    ): string {
         $today = Carbon::now()->startOfDay();
         $date = $date ?? $today->format('Y-m-d');
 
-        $callback = function () use ($country, $date) {
-            return Http::withHeaders(Config::get('api.corona-api-settings'))->get(
-                APIEnums::ENDPOINTS[APIEnums::BASE_URL] . APIEnums::ENDPOINTS[APIEnums::HISTORY]."?country=$country&day=$date"
-            )->body();
-        };
+        $callback = $covidStatisticsService->getByCountryAndDate($country, $date);
 
         return json_encode(
             new StatisticsResultStruct(
                 $this->dateIsInThePast($today, $date) ?
                     Cache::rememberForever("stats-history-$country-$date", $callback) :
-                    Cache::remember("stats-history-$country-$date", 3600, $callback)
+                    Cache::remember("stats-history-$country-$date", 14400, $callback)
             )
         );
     }

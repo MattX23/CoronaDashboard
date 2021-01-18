@@ -73,6 +73,8 @@ class Location extends Model
             $countryName = 'UK';
         } else if ($countryName === 'United Arab Emirates') {
             $countryName = 'UAE';
+        } else if ($countryName === 'South Korea') {
+            $countryName = 'Korea';
         }
 
         return str_replace(' ', '-', $countryName);

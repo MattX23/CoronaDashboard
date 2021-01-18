@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Http\Contracts\CovidStatisticsContract;
+use App\Http\Services\CovidStatisticsService;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -13,7 +15,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        app()->bind(CovidStatisticsContract::class, CovidStatisticsService::class);
     }
 
     /**
