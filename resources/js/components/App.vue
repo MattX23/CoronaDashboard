@@ -32,8 +32,6 @@ export default {
 
 <style lang="scss">
 #main {
-    background: #1a202c;
-    height: 100vh;
     color: white;
 }
 </style>

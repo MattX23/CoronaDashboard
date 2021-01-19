@@ -34,7 +34,7 @@
                         yAxes: [{
                             ticks: {
                                 beginAtZero: true,
-                                callback: (label, index, labels) => {
+                                callback: (label) => {
                                     return label.toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
                                 }
                             }

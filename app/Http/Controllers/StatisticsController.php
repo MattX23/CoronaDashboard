@@ -24,15 +24,21 @@ class StatisticsController extends Controller
         $today = Carbon::now()->startOfDay();
         $date = $date ?? $today->format('Y-m-d');
 
-        $callback = $covidStatisticsService->getByCountryAndDate($country, $date);
-
-        return json_encode(
-            new StatisticsResultStruct(
-                $this->dateIsInThePast($today, $date) ?
-                    Cache::rememberForever("stats-history-$country-$date", $callback) :
-                    Cache::remember("stats-history-$country-$date", 14400, $callback)
-            )
+        $currentStats = new StatisticsResultStruct(
+            $this->dateIsInThePast($today, $date) ?
+                Cache::rememberForever("stats-history-$country-$date", $covidStatisticsService->getByCountryAndDate($country, $date)) :
+                Cache::remember("stats-history-$country-$date", 14400, $covidStatisticsService->getByCountryAndDate($country, $date)),
+                $date
         );
+
+        $lastMonthDate = $today->subMonth()->format('Y-m-d');
+
+        $lastMonthStats = new StatisticsResultStruct(
+            Cache::rememberForever("stats-history-$country-$lastMonthDate", $covidStatisticsService->getByCountryAndDate($country, $lastMonthDate)),
+            $lastMonthDate
+        );
+
+        return json_encode(['current' => $currentStats, 'previous' => $lastMonthStats]);
     }
 
     /**

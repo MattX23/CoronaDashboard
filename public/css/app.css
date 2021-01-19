@@ -9726,3 +9726,8 @@ a.text-dark:hover, a.text-dark:focus {
   }
 }
 
+body {
+  min-height: 100%;
+  background: #1a202c;
+}
+

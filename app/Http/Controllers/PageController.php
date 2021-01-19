@@ -18,7 +18,7 @@ class PageController extends Controller
         $countryName = Location::validateCountryName($location) ? $location->countryName : self::GLOBAL;
         $searchName = $countryName !== self::GLOBAL ? Location::formatCountryName($countryName) : self::ALL;
 
-        $code = $location && $countryName !== self::ALL ? $location->countryCode : null;
+        $code = $location && $countryName !== self::GLOBAL ? $location->countryCode : null;
 
         return view('index')
             ->withCountry($countryName)

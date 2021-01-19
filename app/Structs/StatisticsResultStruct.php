@@ -15,6 +15,7 @@ namespace App\Structs;
  * @property string|null $totalCases
  * @property string|null $newDeaths
  * @property string|null $totalDeaths
+ * @property string $date
  */
 class StatisticsResultStruct
 {
@@ -27,11 +28,13 @@ class StatisticsResultStruct
     public ?string $totalCases;
     public ?string $newDeaths;
     public ?string $totalDeaths;
+    public string $date;
 
     /**
      * @param string $body
+     * @param string $date
      */
-    public function __construct(string $body)
+    public function __construct(string $body, string $date)
     {
         $result = json_decode($body)->response[0];
 
@@ -44,5 +47,6 @@ class StatisticsResultStruct
         $this->totalCases = $result->cases->total;
         $this->newDeaths = $result->deaths->new;
         $this->totalDeaths = $result->deaths->total;
+        $this->date = $date;
     }
 }
