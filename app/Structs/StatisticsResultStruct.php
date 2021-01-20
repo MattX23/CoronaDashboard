@@ -36,17 +36,21 @@ class StatisticsResultStruct
      */
     public function __construct(string $body, string $date)
     {
-        $result = json_decode($body)->response[0];
+        $result = json_decode($body)->response;
 
-        $this->country =  $result->country;
-        $this->population = $result->population;
-        $this->newCases = $result->cases->new;
-        $this->activeCases = $result->cases->active;
-        $this->critical = $result->cases->critical;
-        $this->recovered = $result->cases->recovered;
-        $this->totalCases = $result->cases->total;
-        $this->newDeaths = $result->deaths->new;
-        $this->totalDeaths = $result->deaths->total;
-        $this->date = $date;
+        if (isset($result[0])) {
+            $result = $result[0];
+
+            $this->country =  $result->country;
+            $this->population = $result->population;
+            $this->newCases = $result->cases->new;
+            $this->activeCases = $result->cases->active;
+            $this->critical = $result->cases->critical;
+            $this->recovered = $result->cases->recovered;
+            $this->totalCases = $result->cases->total;
+            $this->newDeaths = $result->deaths->new;
+            $this->totalDeaths = $result->deaths->total;
+            $this->date = $date;
+        }
     }
 }

@@ -1,8 +1,10 @@
 <template>
     <div class="container-fluid">
-        <div class="col-12 navbar-container">
-            <span class="nav-item">Country Search</span>
-            <span class="nav-item">Comparisons</span>
+        <div class="row">
+            <div class="col-12 navbar-container">
+                <span class="nav-item">Country Search</span>
+                <span class="nav-item">Comparisons</span>
+            </div>
         </div>
     </div>
 </template>

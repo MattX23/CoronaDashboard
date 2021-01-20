@@ -1,28 +1,114 @@
 <template>
     <div class="container">
-        <div class="col-12">
-            <img v-if="$props.code" id="country-flag" :src="flagPath" width="64" height="64" :alt="$props.country">
-            <div class="text-center country-name margin-bottom">{{ $props.country }}</div>
-            <div v-if="!isLoading" class="text-center margin-bottom">
-                <span v-if="current.population && current.activeCases" class="btn btn-dark btn-sm non-btn">Currently Infected: {{ currentlyInfected }}%</span>
-                <span v-if="current.population && current.totalCases" class="btn btn-dark btn-sm non-btn">Total Infected: {{ totalInfected }}%</span>
-                <span v-if="current.totalCases && current.recovered" class="btn btn-success btn-sm non-btn">Recovered: {{ recovered }}%</span>
-                <span v-if="current.totalCases && current.totalDeaths" class="btn btn-dark btn-sm non-btn">Deaths: {{ deaths }}%</span>
+        <div class="row">
+            <div class="col-12 margin-bottom">
+                <select class="form-control country-select">
+                    <option disabled selected>-- Select a Country --</option>
+                </select>
             </div>
-            <div class="text-center margin-bottom">
-                <button @click="toggleTotals($event)" data-totals="true" class="btn btn-sm btn-primary btn-toggle">Totals</button>
-                <button @click="toggleTotals($event)" data-updates="true" class="btn btn-sm btn-dark btn-toggle">Daily Change</button>
+            <div class="col-12 text-center margin-bottom">
+                <img v-if="$props.code" id="country-flag" :src="flagPath" width="64" height="64" :alt="$props.country">
+                <div class="text-center country-name margin-bottom">{{ $props.country }}</div>
+                <div class="text-center margin-bottom">
+                    <span
+                        v-if="current.population && current.activeCases"
+                        @click="setMainStats('currentlyInfected')"
+                        data-currentlyInfected="true"
+                        class="btn btn-dark btn-sm main-stats"
+                    >
+                        Currently Infected: {{ getPercentage(current.population, current.activeCases) }}%
+                    </span>
+                    <span
+                        v-if="current.population && current.totalCases"
+                        @click="setMainStats('totalInfected')"
+                        data-totalInfected="true"
+                        class="btn btn-dark btn-sm main-stats"
+                    >
+                    Total Infected: {{ getPercentage(current.population, current.totalCases) }}%
+                    </span>
+                    <span
+                        v-if="current.totalCases && current.recovered"
+                        @click="setMainStats('recovered')"
+                        data-recovered="true"
+                        class="btn btn-dark btn-sm main-stats"
+                    >
+                    Recovered: {{ getPercentage(current.population, current.recovered) }}%
+                    </span>
+                    <span
+                        v-if="current.totalCases && current.totalDeaths"
+                        @click="setMainStats('deaths')"
+                        data-deaths="true"
+                        class="btn btn-dark btn-sm main-stats"
+                    >
+                    Deaths: {{ getPercentage(current.population, current.totalDeaths) }}%
+                    </span>
+                </div>
+                <div v-show="!isLoading" class="text-center margin-bottom">
+                    <div id="stat-text" class="alert alert-light">
+
+                    </div>
+                </div>
+                <div class="text-center margin-bottom">
+                    <button @click="toggleTotals($event)" data-totals="true" class="btn btn-sm btn-primary btn-toggle">Totals</button>
+                    <button @click="toggleTotals($event)" data-updates="true" class="btn btn-sm btn-dark btn-toggle">Daily Change</button>
+                </div>
+                <div v-if="dataUnavailable" class="alert alert-dark text-center">Sorry, this data isn't available yet</div>
+                <loader v-if="isLoading"></loader>
             </div>
-            <div v-if="dataUnavailable" class="alert alert-dark text-center">Sorry, this data isn't available yet</div>
-            <div v-if="isLoading" class="text-center">
-                <div class="loadingio-spinner-spinner-jxdhf28fic8"><div class="ldio-qrstulbbdv8">
-                    <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
-                </div></div>
+        </div>
+        <div class="row">
+            <div class="col-lg-8 margin-bottom">
+                <bar-chart
+                    v-show="!dataUnavailable"
+                    :chart-data="chartData"
+                    class="chart-container"
+                ></bar-chart>
             </div>
-            <bar-chart
-                v-show="!dataUnavailable"
-                :chart-data="chartData"
-            ></bar-chart>
+            <div v-show="!isLoading && !dataUnavailable" class="col-lg-4 outline stats-container box-shadow">
+                <p class="text-center stats-header">
+                    <b v-if="monthlyView">Changes over the last month</b>
+                    <b v-else>Changes since yesterday</b>
+                </p>
+                <div class="container">
+                    <div class="row">
+                        <div v-if="monthlyView" class="col-lg-12 col-md-6 col-sm-12">
+                            <p v-if="current.totalDeaths && previous.totalDeaths">
+                                <span class="stat-info"><span class="bullet">></span>Deaths</span> {{getSymbol(getDifference(current.totalDeaths, previous.totalDeaths))}} {{formatNumber(getDifference(current.totalDeaths, previous.totalDeaths))}}
+                            </p>
+                        </div>
+                        <div v-else class="col-lg-12 col-md-6 col-sm-12">
+                            <p v-if="current.newDeaths && previous.newDeaths">
+                                <span class="stat-info"><span class="bullet">></span>Deaths</span> {{getSymbol(getDifference(current.newDeaths, previous.newDeaths))}} {{formatNumber(getDifference(current.newDeaths, previous.newDeaths))}}
+                            </p>
+                        </div>
+                        <div v-if="monthlyView" class="col-lg-12 col-md-6 col-sm-12">
+                            <p v-if="current.activeCases && previous.activeCases">
+                                <span class="stat-info"><span class="bullet">></span>Active cases</span> {{getSymbol(getDifference(current.activeCases, previous.activeCases))}} {{formatNumber(getDifference(current.activeCases, previous.activeCases))}}
+                            </p>
+                        </div>
+                        <div v-else class="col-lg-12 col-md-6 col-sm-12">
+                            <p v-if="current.newCases && previous.newCases">
+                                <span class="stat-info"><span class="bullet">></span>New cases</span> {{getSymbol(getDifference(current.newCases, previous.newCases))}} {{formatNumber(getDifference(current.newCases, previous.newCases))}}
+                            </p>
+                        </div>
+                        <div v-if="monthlyView" class="col-lg-12 col-md-6 col-sm-12">
+                            <p v-if="current.critical && previous.critical">
+                                <span class="stat-info"><span class="bullet">></span>Critical cases</span> {{getSymbol(getDifference(current.critical, previous.critical))}} {{formatNumber(getDifference(current.critical, previous.critical))}}
+                            </p>
+                        </div>
+                        <div v-if="monthlyView" class="col-lg-12 col-md-6 col-sm-12">
+                           <p v-if="current.recovered && previous.recovered">
+                               <span class="stat-info"><span class="bullet">></span>Recoveries</span> {{getSymbol(getDifference(current.recovered, previous.recovered))}} {{formatNumber(getDifference(current.recovered, previous.recovered))}}
+                           </p>
+                        </div>
+                        <div v-if="monthlyView" class="col-lg-12 col-md-6 col-sm-12">
+                            <p v-if="current.totalCases && previous.totalCases">
+                                <span class="stat-info"><span class="bullet">></span>Total infections</span> {{getSymbol(getDifference(current.totalCases, previous.totalCases))}} {{formatNumber(getDifference(current.totalCases, previous.totalCases))}}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -30,7 +116,14 @@
 <script>
     const INITIAL_STATS = '/api/statistics/';
     const ACTIVE_BTN_CLASS = 'btn-primary';
+    const SUCCESS_BTN_CLASS = 'btn-success';
     const SECONDARY_BTN_CLASS = 'btn-dark';
+    const STATS_BTNS = [
+        'recovered',
+        'deaths',
+        'currentlyInfected',
+        'totalInfected',
+    ];
 
     export default {
         props: {
@@ -47,24 +140,11 @@
         mounted() {
             this.fetchStatistics();
         },
-        computed: {
-            currentlyInfected() {
-                if (this.current.population && this.current.activeCases) return (this.current.activeCases / this.current.population * 100).toFixed(2);
-            },
-            totalInfected() {
-                if (this.current.population && this.current.totalCases) return (this.current.totalCases / this.current.population * 100).toFixed(2);
-            },
-            recovered() {
-                if (this.current.totalCases && this.current.recovered) return (this.current.recovered / this.current.totalCases * 100).toFixed(2);
-            },
-            deaths() {
-                if (this.current.totalCases && this.current.totalDeaths) return (this.current.totalDeaths / this.current.totalCases * 100).toFixed(2);
-            },
-        },
         data() {
             return {
                 isLoading: false,
                 dataUnavailable: false,
+                monthlyView: true,
                 current: {
                     activeCases: null,
                     totalDeaths: null,
@@ -115,13 +195,12 @@
                         this.previous.date = response.data.previous.date;
                     })
                     .then(() => this.chartData = this.constructChartData(true))
+                    .then(() => this.setMainStats())
                     .finally(() => this.isLoading = false);
-            },
-            formatNumber(num) {
-                return num ? num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : "";
             },
             constructChartData(showTotals) {
                 this.dataUnavailable = false;
+                this.monthlyView = showTotals;
 
                 const currentStats = showTotals ?
                     {
@@ -197,16 +276,74 @@
                 this.chartData = this.constructChartData(showTotals);
             },
             toggleBtnClass(el, shouldBeActive) {
-                if (shouldBeActive) {
-                    el.classList.remove(SECONDARY_BTN_CLASS);
-                    el.classList.add(ACTIVE_BTN_CLASS);
-                } else {
-                    el.classList.remove(ACTIVE_BTN_CLASS);
-                    el.classList.add(SECONDARY_BTN_CLASS);
-                }
+                shouldBeActive ?
+                    this.toggleClass(el, SECONDARY_BTN_CLASS, ACTIVE_BTN_CLASS) :
+                    this.toggleClass(el, ACTIVE_BTN_CLASS, SECONDARY_BTN_CLASS);
             },
             formatNumber(num) {
-                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",").replace('-', '- ');
+            },
+            setMainStats(selected = null) {
+                document.querySelectorAll('.main-stats')
+                    .forEach(el => {
+                        el.classList.remove(SUCCESS_BTN_CLASS);
+                        if (!el.classList.contains(SECONDARY_BTN_CLASS)) el.classList.add(SECONDARY_BTN_CLASS);
+                    });
+
+                if (selected) {
+                    this.toggleClass(document.querySelector(`[data-${selected}]`), SECONDARY_BTN_CLASS, SUCCESS_BTN_CLASS);
+                    this.setStatsText(selected)
+                } else {
+                    let set = false;
+
+                    [...STATS_BTNS].forEach(btn => {
+                       if (this.getPercentage(this.current.population, this.current[btn])) {
+                           if (!set) {
+                               const activeBtn = document.querySelector(`[data-${btn}]`);
+                               this.toggleClass(activeBtn, SECONDARY_BTN_CLASS, SUCCESS_BTN_CLASS);
+                               this.setStatsText(btn);
+                               set = true;
+                           }
+                       }
+                    });
+                }
+            },
+            toggleClass(element, classToRemove, classToAdd) {
+                element.classList.remove(classToRemove);
+                element.classList.add(classToAdd);
+            },
+            setStatsText(stat) {
+                const alert = document.getElementById('stat-text');
+
+                const countryPrefix = this.$props.country !== 'World Wide' ? 'in ' : '';
+
+                switch (stat) {
+                    case 'recovered':
+                        alert.innerText = `Of the ${this.formatNumber(this.current.totalCases)} confirmed covid-19 cases ${countryPrefix}${this.$props.country}, ${this.getPercentage(this.current.population, this.current.recovered)}% (${this.formatNumber(this.current.recovered)}) have now recovered.`;
+                        break;
+                    case 'deaths':
+                        alert.innerText = `Of the ${this.formatNumber(this.current.totalCases)} people infected with covid-19 ${countryPrefix}${this.$props.country}, ${this.formatNumber(this.current.totalDeaths)} have died.`;
+                        break;
+                    case 'currentlyInfected':
+                        alert.innerText = `Of the ${this.formatNumber(this.current.totalCases)} covid-19 cases ${countryPrefix}${this.$props.country}, ${this.formatNumber(this.current.activeCases)} are still active.`;
+                        break;
+                    case 'totalInfected':
+                        alert.innerText = `Of the ${this.formatNumber(this.current.population)} people living ${countryPrefix}${this.$props.country}, ${this.formatNumber(this.current.totalCases)} have been infected.`;
+                        break;
+                    default:
+                        alert.innerText = `No additional information could be found for ${this.$props.country}.`;
+                }
+            },
+            getSymbol(num) {
+                if (num > 0) {
+                    return '+';
+                }
+            },
+            getPercentage(x, y) {
+                return (y / x * 100).toFixed(2);
+            },
+            getDifference(x, y) {
+                return x - y;
             }
         }
     }
@@ -218,10 +355,13 @@
     top: 3vh;
 }
 #country-flag {
-    display: block;
-    margin: 0 auto 15px;
+    display: inline-block;
+    margin: 0 10px 10px 0;
+    position: relative;
+    bottom: 3px;
 }
 .country-name {
+    display: inline-block;
     font-size: 2rem;
 }
 .btn-toggle {
@@ -231,146 +371,54 @@
 .margin-bottom {
     margin-bottom: 1.5rem
 }
-.non-btn:hover {
-    cursor: default;
-}
 .alert-dark {
     font-style: italic;
 }
-@keyframes ldio-qrstulbbdv8 {
-    0% { opacity: 1 }
-    100% { opacity: 0 }
+.alert-light {
+    color: #a8a8b5;
+    background-color: transparent;
 }
-.ldio-qrstulbbdv8 div {
-    left: 120.78999999999999px;
-    top: 47.544999999999995px;
-    position: absolute;
-    animation: ldio-qrstulbbdv8 linear 1.3513513513513513s infinite;
-    background: #f87979;
-    width: 15.419999999999998px;
-    height: 17.99px;
-    border-radius: 7.709999999999999px / 8.995px;
-    transform-origin: 7.709999999999999px 80.955px;
-}.ldio-qrstulbbdv8 div:nth-child(1) {
-     transform: rotate(0deg);
-     animation-delay: -1.2762762762762763s;
-     background: #f87979;
- }.ldio-qrstulbbdv8 div:nth-child(2) {
-      transform: rotate(20deg);
-      animation-delay: -1.2012012012012012s;
-      background: #f87979;
-}.ldio-qrstulbbdv8 div:nth-child(3) {
-   transform: rotate(40deg);
-   animation-delay: -1.1261261261261262s;
-   background: #f87979;
-}.ldio-qrstulbbdv8 div:nth-child(4) {
-    transform: rotate(60deg);
-    animation-delay: -1.0510510510510511s;
-    background: #f87979;
-}.ldio-qrstulbbdv8 div:nth-child(5) {
-     transform: rotate(80deg);
-     animation-delay: -0.975975975975976s;
-     background: #f87979;
-      }
-
-.ldio-qrstulbbdv8 div:nth-child(6) {
-    transform: rotate(100deg);
-    animation-delay: -0.9009009009009009s;
-    background: #f87979;
+.outline {
+    border: 1px solid white;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 25px;
 }
-
-.ldio-qrstulbbdv8 div:nth-child(7) {
-    transform: rotate(120deg);
-    animation-delay: -0.8258258258258258s;
-    background: #f87979;
+.chart-container {
+    height: 350px;
 }
-
-.ldio-qrstulbbdv8 div:nth-child(8) {
-    transform: rotate(140deg);
-    animation-delay: -0.7507507507507507s;
-    background: #f87979;
+.stats-container {
+    height: 325px;
 }
-
-.ldio-qrstulbbdv8 div:nth-child(9) {
-    transform: rotate(160deg);
-    animation-delay: -0.6756756756756757s;
-    background: #f87979;
-}
-
-.ldio-qrstulbbdv8 div:nth-child(10) {
-    transform: rotate(180deg);
-    animation-delay: -0.6006006006006006s;
-    background: #f87979;
-}
-
-.ldio-qrstulbbdv8 div:nth-child(11) {
-    transform: rotate(200deg);
-    animation-delay: -0.5255255255255256s;
-    background: #f87979;
-}
-
-.ldio-qrstulbbdv8 div:nth-child(12) {
-    transform: rotate(220deg);
-    animation-delay: -0.45045045045045046s;
-    background: #f87979;
-}
-
-.ldio-qrstulbbdv8 div:nth-child(13) {
-    transform: rotate(240deg);
-    animation-delay: -0.37537537537537535s;
-    background: #f87979;
-}
-
-.ldio-qrstulbbdv8 div:nth-child(14) {
-    transform: rotate(260deg);
-    animation-delay: -0.3003003003003003s;
-    background: #f87979;
-}
-
-.ldio-qrstulbbdv8 div:nth-child(15) {
-    transform: rotate(280deg);
-    animation-delay: -0.22522522522522523s;
-    background: #f87979;
-}
-
-.ldio-qrstulbbdv8 div:nth-child(16) {
-    transform: rotate(300deg);
-    animation-delay: -0.15015015015015015s;
-    background: #f87979;
-}
-
-.ldio-qrstulbbdv8 div:nth-child(17) {
-    transform: rotate(320deg);
-    animation-delay: -0.07507507507507508s;
-    background: #f87979;
-}
-
-.ldio-qrstulbbdv8 div:nth-child(18) {
-    transform: rotate(340deg);
-    animation-delay: 0s;
-    background: #f87979;
-}
-
-.loadingio-spinner-spinner-jxdhf28fic8 {
-    width: 257px;
-    height: 257px;
+.stat-info {
     display: inline-block;
-    overflow: hidden;
-    background: none;
+    width: 130px;
+    margin-top: 10px;
+    margin-left: 20px;
 }
-
-.ldio-qrstulbbdv8 {
-    width: 100%;
-    height: 100%;
+.stats-header {
+    background: white;
+    margin: -10px -10px -5px;
+    height: 45px;
+    color: #1a202c;
+    padding-top: 10px;
+}
+.main-stats {
+    margin-top: 5px;
+}
+.bullet {
+    margin-right: 10px;
+    font-size: .9rem;
+    font-weight: bold;
     position: relative;
-    transform: translateZ(0) scale(1);
-    backface-visibility: hidden;
-    transform-origin: 0 0; /* see note above */
+    bottom: 1px;
 }
-
-.ldio-qrstulbbdv8 div {
-    box-sizing: content-box;
+.box-shadow {
+    -webkit-box-shadow: 5px 7px 7px 5px rgba(0,0,0,0.47);
+    box-shadow: 5px 7px 7px 5px rgba(0,0,0,0.47);
 }
-
-/* generated by https://loading.io/ */
+.country-select {
+    width: 50%;
+    margin: auto;
+}
 </style>
