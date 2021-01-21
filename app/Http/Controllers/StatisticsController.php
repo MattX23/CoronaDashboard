@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Contracts\CovidStatisticsContract;
+use App\Models\Location;
 use App\Structs\StatisticsResultStruct;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -38,7 +39,9 @@ class StatisticsController extends Controller
             $lastMonthDate
         );
 
-        return json_encode(['current' => $currentStats, 'previous' => $lastMonthStats]);
+        $countryCode = Location::getCountryCode(str_replace('-', ' ', $country));
+
+        return json_encode(['current' => $currentStats, 'previous' => $lastMonthStats, 'countryCode' => $countryCode]);
     }
 
     /**

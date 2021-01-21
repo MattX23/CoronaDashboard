@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CountryController;
 use App\Http\Controllers\StatisticsController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,3 +16,4 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('statistics/{country?}/{date?}', [StatisticsController::class, 'getStatsByCountryAndDate']);
+Route::get('countries', [CountryController::class, 'getCountries']);

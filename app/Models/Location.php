@@ -12,6 +12,8 @@ use Stevebauman\Location\Position;
 
 class Location extends Model
 {
+    const COUNTRY_CODE_ENDPOINT = "https://restcountries.eu/rest/v2/name/";
+
     /**
      * @return bool|\Stevebauman\Location\Position|null
      */
@@ -48,7 +50,7 @@ class Location extends Model
     /**
      * @return array
      */
-    protected static function getCountries(): array
+    public static function getCountries(): array
     {
         return Cache::rememberForever("countries", function() {
             return json_decode(
@@ -58,6 +60,28 @@ class Location extends Model
             )
                 ->response;
         });
+    }
+
+    /**
+     * @param string $country
+     *
+     * @return string|null
+     */
+    public static function getCountryCode(string $country): ?string
+    {
+        $country = Location::normaliseCountryName($country);
+        $countryCode = Cache::get("country-code-$country");
+
+        if (!$countryCode) {
+            $countryInfo = Http::get(self::COUNTRY_CODE_ENDPOINT.$country)
+                ->body();
+
+            if ($countryInfo) {
+                $countryCode = is_array(json_decode($countryInfo)) ? json_decode($countryInfo)[0]->alpha2Code : null;
+            }
+        }
+
+        return $countryCode;
     }
 
     /**
@@ -78,5 +102,21 @@ class Location extends Model
         }
 
         return str_replace(' ', '-', $countryName);
+    }
+
+    /**
+     * @param string $countryName
+     *
+     * @return string|null
+     */
+    public static function normaliseCountryName(string $countryName): ?string
+    {
+        if ($countryName === 'UK') {
+            $countryName = 'United Kingdom';
+        } else if ($countryName === 'World Wide') {
+            $countryName = null;
+        }
+
+        return $countryName;
     }
 }
