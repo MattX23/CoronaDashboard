@@ -383,7 +383,7 @@
                         break;
                     case 'deaths':
                         alert.innerText =
-                            `Of the ${this.formatNumber(this.current.totalCases)} people infected with covid-19 ${countryPrefix}${this.countryName}, ${this.formatNumber(this.current.totalDeaths)} have died.
+                            `Of the ${this.formatNumber(this.current.totalCases)} people infected with covid-19 ${countryPrefix}${this.countryName}, ${this.formatNumber(this.current.totalDeaths)} (${this.getPercentage(this.current.totalCases, this.current.totalDeaths)}%) have died.
                             (${this.getPercentage(this.current.population, this.current.totalDeaths)}% of the total population)`;
                         break;
                     case 'currentlyInfected':
