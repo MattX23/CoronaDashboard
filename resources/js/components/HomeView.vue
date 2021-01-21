@@ -1,8 +1,17 @@
 <template>
     <div class="container">
         <div class="row">
-            <div v-if="shouldShowSearchBar" class="col-12 margin-bottom">
-                <select @change="changeCountry(selectedCountry, country.name)" class="form-control country-select" v-model="selectedCountry">
+            <div v-if="shouldShowCountrySearchBar" class="col-6 center-col">
+                <span
+                    @click="shouldShowCountrySearchBar = false"
+                    id="close-country-search"
+                    class="light-box-shadow"
+                >X</span>
+                <select
+                    @change="changeCountry(selectedCountry, country.name)"
+                    v-model="selectedCountry"
+                    class="form-control country-select"
+                >
                     <option :value="null" disabled selected>-- Select a Country --</option>
                     <option
                         v-for="country in countries"
@@ -148,7 +157,7 @@
             }
         },
         created() {
-            EventBus.$on('show-search-bar', () => this.shouldShowSearchBar = true);
+            EventBus.$on('show-search-bar', () => this.shouldShowCountrySearchBar = true);
         },
         mounted() {
             this.countrySearchTerm = this.$props.searchName;
@@ -171,7 +180,7 @@
                 dataUnavailable: false,
                 monthlyView: true,
                 selectedCountry: null,
-                shouldShowSearchBar: false,
+                shouldShowCountrySearchBar: false,
                 countries: [],
                 current: {
                     activeCases: null,
@@ -244,7 +253,7 @@
                 this.loadStatistics();
                 this.resetTotalBtn();
                 this.setMainStats();
-                this.shouldShowSearchBar = false;
+                this.shouldShowCountrySearchBar = false;
             },
             constructChartData(showTotals) {
                 this.dataUnavailable = false;
@@ -480,8 +489,31 @@
     -webkit-box-shadow: 5px 7px 7px 5px rgba(0,0,0,0.47);
     box-shadow: 5px 7px 7px 5px rgba(0,0,0,0.47);
 }
+.light-box-shadow {
+    box-shadow: 5px 7px 7px 5px rgba(0,0,0,0.25);
+}
 .country-select {
-    width: 75%;
     margin: auto;
+}
+.center-col {
+    margin: 0 auto 1.5rem;
+}
+#close-country-search {
+    position: absolute;
+    right: -5px;
+    background: #f87979;
+    padding: 10px;
+    border-radius: 100px;
+    height: 30px;
+    line-height: 11px;
+    bottom: 24px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    opacity: 0.85;
+}
+#close-country-search:hover {
+    background: #f86661;
+    opacity: 1;
 }
 </style>
