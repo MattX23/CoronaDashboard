@@ -13,6 +13,9 @@ use Stevebauman\Location\Position;
 class Location extends Model
 {
     const COUNTRY_CODE_ENDPOINT = "https://restcountries.eu/rest/v2/name/";
+    const FULL_TEXT_SEARCH = '?fullText=true';
+    const WORLD_WIDE = 'World Wide';
+    const ALL = 'All';
 
     /**
      * @return bool|\Stevebauman\Location\Position|null
@@ -53,12 +56,18 @@ class Location extends Model
     public static function getCountries(): array
     {
         return Cache::rememberForever("countries", function() {
-            return json_decode(
-                Http::withHeaders(Config::get('api.corona-api-settings'))
-                    ->get(APIEnums::ENDPOINTS[APIEnums::BASE_URL].APIEnums::ENDPOINTS[APIEnums::COUNTRIES])
-                    ->body()
+            return collect(
+                json_decode(
+                    Http::withHeaders(Config::get('api.corona-api-settings'))
+                        ->get(APIEnums::ENDPOINTS[APIEnums::BASE_URL] . APIEnums::ENDPOINTS[APIEnums::COUNTRIES])
+                        ->body()
+                )
+                    ->response
             )
-                ->response;
+                ->map(fn(string $country) => str_contains($country, '&') ? '' : $country)
+                ->reject(fn(string $country) => !$country)
+                ->push(self::WORLD_WIDE)
+                ->toArray();
         });
     }
 
@@ -69,11 +78,13 @@ class Location extends Model
      */
     public static function getCountryCode(string $country): ?string
     {
+        if ($country === self::ALL) return null;
+
         $country = Location::normaliseCountryName($country);
         $countryCode = Cache::get("country-code-$country");
 
         if (!$countryCode) {
-            $countryInfo = Http::get(self::COUNTRY_CODE_ENDPOINT.$country)
+            $countryInfo = Http::get(self::COUNTRY_CODE_ENDPOINT.str_replace(' ', '%20', $country).self::FULL_TEXT_SEARCH)
                 ->body();
 
             if ($countryInfo) {
@@ -112,7 +123,7 @@ class Location extends Model
     public static function normaliseCountryName(string $countryName): ?string
     {
         if ($countryName === 'UK') {
-            $countryName = 'United Kingdom';
+            $countryName = 'United Kingdom of Great Britain and Northern Ireland';
         } else if ($countryName === 'World Wide') {
             $countryName = null;
         }

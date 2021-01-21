@@ -16,7 +16,7 @@
             <div class="col-12 text-center margin-bottom">
                 <img v-if="countryCode" id="country-flag" :src="flagPath" width="64" height="64" :alt="countryName">
                 <div class="text-center country-name margin-bottom">{{ countryName }}</div>
-                <div v-show="!isLoading" class="text-center margin-bottom">
+                <div v-show="!isLoading && current.population" class="text-center margin-bottom">
                     <span
                         v-if="current.population && current.activeCases"
                         @click="setMainStats('currentlyInfected')"
@@ -39,7 +39,7 @@
                         data-recovered="true"
                         class="btn btn-dark btn-sm main-stats"
                     >
-                    Recovered: {{ getPercentage(current.population, current.recovered) }}%
+                    Recovered: {{ getPercentage(current.totalCases, current.recovered) }}%
                     </span>
                     <span
                         v-if="current.totalCases && current.totalDeaths"
@@ -47,10 +47,10 @@
                         data-deaths="true"
                         class="btn btn-dark btn-sm main-stats"
                     >
-                    Deaths: {{ getPercentage(current.population, current.totalDeaths) }}%
+                    Deaths: {{ getPercentage(current.totalCases, current.totalDeaths) }}%
                     </span>
                 </div>
-                <div v-show="!isLoading" class="text-center margin-bottom">
+                <div v-show="!isLoading && current.population" class="text-center margin-bottom">
                     <div id="stat-text" class="alert alert-light">
 
                     </div>
@@ -348,10 +348,11 @@
                        if (this.current[btn] !== null) {
                            if (!set) {
                                const activeBtn = document.querySelector(`[data-${btn}]`);
-                               this.toggleClass(activeBtn, SECONDARY_BTN_CLASS, SUCCESS_BTN_CLASS);
-                               console.log(btn)
-                               this.setStatsText(btn);
-                               set = true;
+                               if (activeBtn) {
+                                   this.toggleClass(activeBtn, SECONDARY_BTN_CLASS, SUCCESS_BTN_CLASS);
+                                   this.setStatsText(btn);
+                                   set = true;
+                               }
                            }
                        }
                     });
@@ -368,16 +369,23 @@
 
                 switch (stat) {
                     case 'recovered':
-                        alert.innerText = `Of the ${this.formatNumber(this.current.totalCases)} confirmed covid-19 cases ${countryPrefix}${this.countryName}, ${this.getPercentage(this.current.population, this.current.recovered)}% (${this.formatNumber(this.current.recovered)}) have now recovered.`;
+                        alert.innerText =
+                            `Of the ${this.formatNumber(this.current.totalCases)} confirmed covid-19 cases ${countryPrefix}${this.countryName}, ${this.getPercentage(this.current.totalCases, this.current.recovered)}% (${this.formatNumber(this.current.recovered)}) have now recovered.`;
                         break;
                     case 'deaths':
-                        alert.innerText = `Of the ${this.formatNumber(this.current.totalCases)} people infected with covid-19 ${countryPrefix}${this.countryName}, ${this.formatNumber(this.current.totalDeaths)} have died.`;
+                        alert.innerText =
+                            `Of the ${this.formatNumber(this.current.totalCases)} people infected with covid-19 ${countryPrefix}${this.countryName}, ${this.formatNumber(this.current.totalDeaths)} have died.
+                            (${this.getPercentage(this.current.population, this.current.totalDeaths)}% of the total population)`;
                         break;
                     case 'currentlyInfected':
-                        alert.innerText = `Of the ${this.formatNumber(this.current.totalCases)} covid-19 cases ${countryPrefix}${this.countryName}, ${this.formatNumber(this.current.activeCases)} are still active.`;
+                        alert.innerText =
+                            `Of the ${this.formatNumber(this.current.totalCases)} covid-19 cases ${countryPrefix}${this.countryName}, ${this.formatNumber(this.current.activeCases)} are still active.
+                            (${this.getPercentage(this.current.population, this.current.activeCases)}% of the total population)`;
                         break;
                     case 'totalInfected':
-                        alert.innerText = `Of the ${this.formatNumber(this.current.population)} people living ${countryPrefix}${this.countryName}, ${this.formatNumber(this.current.totalCases)} have been infected.`;
+                        alert.innerText =
+                            `Of the ${this.formatNumber(this.current.population)} people living ${countryPrefix}${this.countryName}, ${this.formatNumber(this.current.totalCases)} have been infected.
+                            (${this.getPercentage(this.current.population, this.current.totalCases)}% of the total population)`;
                         break;
                     default:
                         alert.innerText = `No additional information could be found for ${this.countryName}.`;

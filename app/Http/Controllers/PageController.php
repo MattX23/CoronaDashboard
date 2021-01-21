@@ -17,7 +17,7 @@ class PageController extends Controller
     {
         $location = Location::getUserLocation();
         $countryName = Location::validateCountryName($location) ? $location->countryName : self::GLOBAL;
-        $searchName = $countryName !== self::GLOBAL ? Location::formatCountryName($countryName) : self::ALL;
+        $searchName = $countryName !== Location::WORLD_WIDE ? Location::formatCountryName($countryName) : Location::ALL;
         $code = $location && $countryName !== self::GLOBAL ? $location->countryCode : null;
 
         if ($location && $countryName) {
