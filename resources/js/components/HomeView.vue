@@ -3,9 +3,9 @@
         <div class="row">
             <div v-if="shouldShowCountrySearchBar" class="col-6 center-col">
                 <span
-                    @click="shouldShowCountrySearchBar = false"
+                    @click="closeSearchBar()"
                     id="close-country-search"
-                    class="light-box-shadow"
+                    class="light-box-shadow close-btn"
                 >X</span>
                 <select
                     @change="changeCountry(selectedCountry, country.name)"
@@ -21,6 +21,14 @@
                         {{country.name}}
                     </option>
                 </select>
+            </div>
+            <div v-if="shouldShowDateBar" class="col-4 center-col">
+                <span
+                    @click="closeSearchBar()"
+                    id="close-date-search"
+                    class="light-box-shadow close-btn"
+                >X</span>
+                <input @change="searchByDate" v-model="targetDate" type="date" id="datePicker" class="form-control date-picker" min="2020-01-01" max="">
             </div>
             <div class="col-12 text-center margin-bottom">
                 <img v-if="countryCode" id="country-flag" :src="flagPath" width="64" height="64" :alt="countryName">
@@ -82,8 +90,8 @@
             </div>
             <div v-show="!isLoading && !dataUnavailable" class="col-lg-4 outline stats-container box-shadow">
                 <p class="text-center stats-header">
-                    <b v-if="monthlyView">Changes over the last month</b>
-                    <b v-else>Changes since yesterday</b>
+                    <b v-show="monthlyView" id="statsBoxMonthly">{{ monthlyChanges }}</b>
+                    <b v-show="!monthlyView" id="statsBoxDaily">{{ dailyChanges }}</b>
                 </p>
                 <div class="container">
                     <div class="row">
@@ -157,12 +165,21 @@
             }
         },
         created() {
-            EventBus.$on('show-search-bar', () => this.shouldShowCountrySearchBar = true);
+            EventBus.$on('show-search-bar', () => {
+                this.closeSearchBar();
+                this.shouldShowCountrySearchBar = true;
+            });
+            EventBus.$on('show-date-bar', () => {
+                this.closeSearchBar();
+                this.shouldShowDateBar = true;
+                this.$nextTick(() => document.getElementById('datePicker').setAttribute('max', this.targetDate));
+            });
         },
         mounted() {
             this.countrySearchTerm = this.$props.searchName;
             this.countryName = this.$props.country;
             this.countryCode = this.$props.code;
+            this.targetDate = this.getLocalDateAsString();
             this.fetchStatistics();
             this.fetchCountries();
         },
@@ -181,7 +198,11 @@
                 monthlyView: true,
                 selectedCountry: null,
                 shouldShowCountrySearchBar: false,
+                shouldShowDateBar: false,
                 countries: [],
+                targetDate: null,
+                monthlyChanges: null,
+                dailyChanges: null,
                 current: {
                     activeCases: null,
                     totalDeaths: null,
@@ -210,6 +231,7 @@
             fetchStatistics() {
                 this.isLoading = true;
                 this.loadStatistics();
+                this.resetStatsBoxText();
             },
             fetchCountries() {
                 axios.get(GET_COUNTRIES)
@@ -218,42 +240,57 @@
                     });
             },
             loadStatistics() {
-                axios.get(`${GET_STATS}${this.countrySearchTerm}`)
-                    .then(response => {
-                        this.current.activeCases = response.data.current.activeCases;
-                        this.current.totalDeaths = response.data.current.totalDeaths;
-                        this.current.recovered = response.data.current.recovered;
-                        this.current.totalCases = response.data.current.totalCases;
-                        this.current.critical = response.data.current.critical;
-                        this.current.newDeaths = response.data.current.newDeaths;
-                        this.current.newCases = response.data.current.newCases;
-                        this.current.date = response.data.current.date;
-                        this.current.population = response.data.current.population;
-
-                        this.countryCode = response.data.countryCode;
-
-                        this.previous.activeCases = response.data.previous.activeCases;
-                        this.previous.totalDeaths = response.data.previous.totalDeaths;
-                        this.previous.recovered = response.data.previous.recovered;
-                        this.previous.totalCases = response.data.previous.totalCases;
-                        this.previous.critical = response.data.previous.critical;
-                        this.previous.newDeaths = response.data.previous.newDeaths;
-                        this.previous.newCases = response.data.previous.newCases;
-                        this.previous.date = response.data.previous.date;
-                    })
+                axios.get(`${GET_STATS}${this.countrySearchTerm}/${this.targetDate}`)
+                    .then(response => this.setProperties(response))
                     .then(() => this.chartData = this.constructChartData(true))
                     .then(() => this.setMainStats())
                     .finally(() => this.isLoading = false);
             },
             changeCountry(country) {
-                this.isLoading = true;
                 this.countryCode = null;
                 this.countryName = country.name;
                 this.countrySearchTerm = country.search;
+                this.performNewSearch();
+                this.resetStatsBoxText();
+            },
+            searchByDate() {
+                this.performNewSearch();
+                this.monthlyChanges = `Changes since ${this.targetDate}`;
+                this.dailyChanges = `Daily changes: ${this.targetDate} vs Today`;
+            },
+            performNewSearch() {
+                this.isLoading = true;
                 this.loadStatistics();
                 this.resetTotalBtn();
                 this.setMainStats();
                 this.shouldShowCountrySearchBar = false;
+                this.shouldShowDateBar = false;
+            },
+            resetStatsBoxText() {
+                this.monthlyChanges = `Changes over the last month`;
+                this.dailyChanges = `Daily changes month-on-month`;
+            },
+            setProperties(response) {
+                this.current.activeCases = response.data.current.activeCases;
+                this.current.totalDeaths = response.data.current.totalDeaths;
+                this.current.recovered = response.data.current.recovered;
+                this.current.totalCases = response.data.current.totalCases;
+                this.current.critical = response.data.current.critical;
+                this.current.newDeaths = response.data.current.newDeaths;
+                this.current.newCases = response.data.current.newCases;
+                this.current.date = response.data.current.date;
+                this.current.population = response.data.current.population;
+
+                this.countryCode = response.data.countryCode;
+
+                this.previous.activeCases = response.data.previous.activeCases;
+                this.previous.totalDeaths = response.data.previous.totalDeaths;
+                this.previous.recovered = response.data.previous.recovered;
+                this.previous.totalCases = response.data.previous.totalCases;
+                this.previous.critical = response.data.previous.critical;
+                this.previous.newDeaths = response.data.previous.newDeaths;
+                this.previous.newCases = response.data.previous.newCases;
+                this.previous.date = response.data.previous.date;
             },
             constructChartData(showTotals) {
                 this.dataUnavailable = false;
@@ -309,12 +346,12 @@
                     datasets: [
                         {
                             label: showTotals ? `Totals on ${this.previous.date}` : `Daily figures on ${this.previous.date}`,
-                            backgroundColor: showTotals ? '#fff' : '#f87979',
+                            backgroundColor: '#fff',
                             data: lastMonthData
                         },
                         {
                             label: showTotals ? 'Totals as of today' : 'Daily Figures as of today',
-                            backgroundColor: showTotals ? '#f87979' : '#fff',
+                            backgroundColor: '#f87979',
                             data: currentData
                         }
                     ]
@@ -416,8 +453,19 @@
                 const secondaryBtn = document.querySelector('[data-updates]');
                 this.toggleBtnClass(totalsBtn, true);
                 this.toggleBtnClass(secondaryBtn, false);
+            },
+            closeSearchBar() {
+                this.shouldShowCountrySearchBar = false;
+                this.shouldShowDateBar = false;
+            },
+            getLocalDateAsString() {
+                const date = new Date();
+                const offsetMs = date.getTimezoneOffset() * 60 * 1000;
+                const dateLocal = new Date(date.getTime() - offsetMs);
+
+                return dateLocal.toISOString().slice(0, 10).replace(/-/g, "-").replace("T", " ");
             }
-        }
+        },
     }
 </script>
 
@@ -495,12 +543,14 @@
 .country-select {
     margin: auto;
 }
+.date-picker {
+    margin: auto;
+}
 .center-col {
     margin: 0 auto 1.5rem;
 }
-#close-country-search {
+.close-btn {
     position: absolute;
-    right: -5px;
     background: #f87979;
     padding: 10px;
     border-radius: 100px;
@@ -511,8 +561,9 @@
     font-weight: bold;
     cursor: pointer;
     opacity: 0.85;
+    right: -5px;
 }
-#close-country-search:hover {
+.close-btn:hover {
     background: #f86661;
     opacity: 1;
 }

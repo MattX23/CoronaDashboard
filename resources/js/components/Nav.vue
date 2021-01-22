@@ -3,6 +3,7 @@
         <div class="row">
             <div class="col-12 navbar-container">
                 <span class="nav-item" @click="showSearchBar">Country Search</span>
+                <span class="nav-item" @click="showDateBar">Date Search</span>
                 <span class="nav-item">Comparisons</span>
             </div>
         </div>
@@ -17,6 +18,9 @@ export default {
     methods: {
         showSearchBar() {
             EventBus.$emit('show-search-bar');
+        },
+        showDateBar() {
+            EventBus.$emit('show-date-bar');
         },
     }
 }

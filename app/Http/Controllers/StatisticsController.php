@@ -13,26 +13,29 @@ class StatisticsController extends Controller
     /**
      * @param \App\Http\Contracts\CovidStatisticsContract $covidStatisticsService
      * @param string|null                                 $country
-     * @param string|null                                 $date
-     *
+     * @param string                                      $targetDate
      * @return string
      */
     public function getStatsByCountryAndDate(
         CovidStatisticsContract $covidStatisticsService,
         string $country,
-        string $date = null
+        string $targetDate
     ): string {
         $today = Carbon::now()->startOfDay();
-        $date = $date ?? $today->format('Y-m-d');
+        $date = $today->format('Y-m-d');
 
         if ($country === Location::WORLD_WIDE) $country = Location::ALL;
 
         $currentStats = $this->getCurrentStats($today, $date, $country, $covidStatisticsService);
-        $lastMonthDate = $today->subMonth()->format('Y-m-d');
-        $lastMonthStats = $this->getLastMonthStats($country, $lastMonthDate, $covidStatisticsService);
+        $targetDate = $targetDate === $date ? $today->subMonth()->format('Y-m-d') : $targetDate;
+        $previousStats = $this->getTargetDateStats($country, $targetDate, $covidStatisticsService);
         $countryCode = $this->getCountryCode($country);
 
-        return json_encode(['current' => $currentStats, 'previous' => $lastMonthStats, 'countryCode' => $countryCode]);
+        return json_encode([
+            'current' => $currentStats,
+            'previous' => $previousStats,
+            'countryCode' => $countryCode
+        ]);
     }
 
     /**
@@ -66,21 +69,21 @@ class StatisticsController extends Controller
 
     /**
      * @param string                                      $country
-     * @param string                                      $lastMonthDate
+     * @param string                                      $targetDate
      * @param \App\Http\Contracts\CovidStatisticsContract $covidStatisticsService
      *
      * @return \App\Structs\StatisticsResultStruct
      */
-    protected function getLastMonthStats(string $country, string $lastMonthDate, CovidStatisticsContract $covidStatisticsService): StatisticsResultStruct
+    protected function getTargetDateStats(string $country, string $targetDate, CovidStatisticsContract $covidStatisticsService): StatisticsResultStruct
     {
-        $lastMonthStats =  new StatisticsResultStruct(
-            Cache::rememberForever("stats-history-$country-$lastMonthDate", $covidStatisticsService->getByCountryAndDate($country, $lastMonthDate)),
-            $lastMonthDate
+        $targetStats = new StatisticsResultStruct(
+            Cache::rememberForever("stats-history-$country-$targetDate", $covidStatisticsService->getByCountryAndDate($country, $targetDate)),
+            $targetDate
         );
 
-        if (!isset($lastMonthStats->totalCases)) Cache::forget("stats-history-$country-$lastMonthDate");
+        if (!isset($targetStats->totalCases)) Cache::forget("stats-history-$country-$targetDate");
 
-        return $lastMonthStats;
+        return $targetStats;
     }
 
     /**
