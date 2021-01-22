@@ -8,6 +8,7 @@ Vue.component('nav-bar', require('./components/Nav.vue').default);
 Vue.component('home-view', require('./components/HomeView.vue').default);
 Vue.component('bar-chart', require('./components/BarChart.vue').default);
 Vue.component('loader', require('./components/Loader.vue').default);
+Vue.component('stats-box', require('./components/StatsBox.vue').default);
 
 const app = new Vue({
     el: '#app',

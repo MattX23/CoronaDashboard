@@ -93,45 +93,11 @@
                     <b v-show="monthlyView" id="statsBoxMonthly">{{ monthlyChanges }}</b>
                     <b v-show="!monthlyView" id="statsBoxDaily">{{ dailyChanges }}</b>
                 </p>
-                <div class="container">
-                    <div class="row">
-                        <div v-if="monthlyView && current.totalDeaths && previous.totalDeaths" class="col-lg-12 col-md-6 col-sm-12">
-                            <p>
-                                <span class="stat-info"><span class="bullet">></span>Deaths</span> {{getSymbol(getDifference(current.totalDeaths, previous.totalDeaths))}} {{formatNumber(getDifference(current.totalDeaths, previous.totalDeaths))}}
-                            </p>
-                        </div>
-                        <div v-if="!monthlyView && current.newDeaths && previous.newDeaths" class="col-lg-12 col-md-6 col-sm-12">
-                            <p>
-                                <span class="stat-info"><span class="bullet">></span>Deaths</span> {{getSymbol(getDifference(current.newDeaths, previous.newDeaths))}} {{formatNumber(getDifference(current.newDeaths, previous.newDeaths))}}
-                            </p>
-                        </div>
-                        <div v-if="monthlyView && current.activeCases && previous.activeCases" class="col-lg-12 col-md-6 col-sm-12">
-                            <p>
-                                <span class="stat-info"><span class="bullet">></span>Active cases</span> {{getSymbol(getDifference(current.activeCases, previous.activeCases))}} {{formatNumber(getDifference(current.activeCases, previous.activeCases))}}
-                            </p>
-                        </div>
-                        <div v-if="!monthlyView && current.newCases && previous.newCases" class="col-lg-12 col-md-6 col-sm-12">
-                            <p>
-                                <span class="stat-info"><span class="bullet">></span>New cases</span> {{getSymbol(getDifference(current.newCases, previous.newCases))}} {{formatNumber(getDifference(current.newCases, previous.newCases))}}
-                            </p>
-                        </div>
-                        <div v-if="monthlyView && current.critical && previous.critical" class="col-lg-12 col-md-6 col-sm-12">
-                            <p>
-                                <span class="stat-info"><span class="bullet">></span>Critical cases</span> {{getSymbol(getDifference(current.critical, previous.critical))}} {{formatNumber(getDifference(current.critical, previous.critical))}}
-                            </p>
-                        </div>
-                        <div v-if="monthlyView && current.recovered && previous.recovered" class="col-lg-12 col-md-6 col-sm-12">
-                           <p>
-                               <span class="stat-info"><span class="bullet">></span>Recoveries</span> {{getSymbol(getDifference(current.recovered, previous.recovered))}} {{formatNumber(getDifference(current.recovered, previous.recovered))}}
-                           </p>
-                        </div>
-                        <div v-if="monthlyView && current.totalCases && previous.totalCases" class="col-lg-12 col-md-6 col-sm-12">
-                            <p>
-                                <span class="stat-info"><span class="bullet">></span>Total infections</span> {{getSymbol(getDifference(current.totalCases, previous.totalCases))}} {{formatNumber(getDifference(current.totalCases, previous.totalCases))}}
-                            </p>
-                        </div>
-                    </div>
-                </div>
+                <stats-box
+                    :current="current"
+                    :monthly-view="monthlyView"
+                    :previous="previous"
+                ></stats-box>
             </div>
         </div>
     </div>
@@ -139,6 +105,7 @@
 
 <script>
     import {EventBus} from "../eventbus/event-bus";
+    import { formatNumber, getPercentage } from "../helpers/mathematics";
 
     const GET_STATS = '/api/statistics/';
     const GET_COUNTRIES = '/api/countries/';
@@ -190,44 +157,46 @@
         },
         data() {
             return {
-                isLoading: false,
-                countrySearchTerm: null,
-                countryName: null,
+                chartData: {},
+                countries: [],
                 countryCode: null,
+                countryName: null,
+                countrySearchTerm: null,
+                current: {
+                    activeCases: null,
+                    critical: null,
+                    date: null,
+                    newCases: null,
+                    newDeaths: null,
+                    population: null,
+                    recovered: null,
+                    totalCases: null,
+                    totalDeaths: null,
+                },
                 dataUnavailable: false,
+                dailyChanges: null,
+                isLoading: false,
+                monthlyChanges: null,
                 monthlyView: true,
+                previous: {
+                    activeCases: null,
+                    critical: null,
+                    date: null,
+                    newCases: null,
+                    newDeaths: null,
+                    recovered: null,
+                    totalCases: null,
+                    totalDeaths: null,
+                },
                 selectedCountry: null,
                 shouldShowCountrySearchBar: false,
                 shouldShowDateBar: false,
-                countries: [],
                 targetDate: null,
-                monthlyChanges: null,
-                dailyChanges: null,
-                current: {
-                    activeCases: null,
-                    totalDeaths: null,
-                    recovered: null,
-                    totalCases: null,
-                    critical: null,
-                    newDeaths: null,
-                    newCases: null,
-                    date: null,
-                    population: null,
-                },
-                previous: {
-                    activeCases: null,
-                    totalDeaths: null,
-                    recovered: null,
-                    totalCases: null,
-                    critical: null,
-                    newDeaths: null,
-                    newCases: null,
-                    date: null,
-                },
-                chartData: {},
             }
         },
         methods: {
+            formatNumber,
+            getPercentage,
             fetchStatistics() {
                 this.isLoading = true;
                 this.loadStatistics();
@@ -235,9 +204,7 @@
             },
             fetchCountries() {
                 axios.get(GET_COUNTRIES)
-                    .then(response => {
-                        this.countries = response.data;
-                    });
+                    .then(response => this.countries = response.data);
             },
             loadStatistics() {
                 axios.get(`${GET_STATS}${this.countrySearchTerm}/${this.targetDate}`)
@@ -263,8 +230,7 @@
                 this.loadStatistics();
                 this.resetTotalBtn();
                 this.setMainStats();
-                this.shouldShowCountrySearchBar = false;
-                this.shouldShowDateBar = false;
+                this.closeSearchBar();
             },
             resetStatsBoxText() {
                 this.monthlyChanges = `Changes over the last month`;
@@ -374,9 +340,6 @@
                     this.toggleClass(el, SECONDARY_BTN_CLASS, ACTIVE_BTN_CLASS) :
                     this.toggleClass(el, ACTIVE_BTN_CLASS, SECONDARY_BTN_CLASS);
             },
-            formatNumber(num) {
-                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",").replace('-', '- ');
-            },
             setMainStats(selected = null) {
                 document.querySelectorAll('.main-stats')
                     .forEach(el => {
@@ -442,9 +405,6 @@
                     return '+';
                 }
             },
-            getPercentage(x, y) {
-                return (y / x * 100).toFixed(2);
-            },
             getDifference(x, y) {
                 return x - y;
             },
@@ -488,9 +448,6 @@
     margin: 0 5px;
     min-width: 95px;
 }
-.margin-bottom {
-    margin-bottom: 1.5rem
-}
 .alert-dark {
     font-style: italic;
 }
@@ -510,12 +467,6 @@
 .stats-container {
     height: 325px;
 }
-.stat-info {
-    display: inline-block;
-    width: 130px;
-    margin-top: 10px;
-    margin-left: 20px;
-}
 .stats-header {
     background: white;
     margin: -10px -10px -5px;
@@ -525,17 +476,6 @@
 }
 .main-stats {
     margin-top: 5px;
-}
-.bullet {
-    margin-right: 10px;
-    font-size: .9rem;
-    font-weight: bold;
-    position: relative;
-    bottom: 1px;
-}
-.box-shadow {
-    -webkit-box-shadow: 5px 7px 7px 5px rgba(0,0,0,0.47);
-    box-shadow: 5px 7px 7px 5px rgba(0,0,0,0.47);
 }
 .light-box-shadow {
     box-shadow: 5px 7px 7px 5px rgba(0,0,0,0.25);
@@ -566,5 +506,9 @@
 .close-btn:hover {
     background: #f86661;
     opacity: 1;
+}
+.box-shadow {
+    -webkit-box-shadow: 5px 7px 7px 5px rgba(0,0,0,0.47);
+    box-shadow: 5px 7px 7px 5px rgba(0,0,0,0.47);
 }
 </style>
