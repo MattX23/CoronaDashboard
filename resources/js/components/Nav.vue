@@ -4,7 +4,7 @@
             <div class="col-12 navbar-container">
                 <span class="nav-item" @click="showSearchBar">Country Search</span>
                 <span class="nav-item" @click="showDateBar">Date Search</span>
-                <span class="nav-item">Comparisons</span>
+                <span class="nav-item">World Wide</span>
             </div>
         </div>
     </div>
