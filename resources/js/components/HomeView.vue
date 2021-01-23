@@ -38,6 +38,7 @@
                     :current="current"
                     :country-name="countryName"
                     :is-loading="isLoading"
+                    id="barChart"
                 ></stats-buttons>
                 <div v-show="!isLoading && current.population" class="text-center margin-bottom">
                     <div id="stat-text" class="alert alert-light"></div>

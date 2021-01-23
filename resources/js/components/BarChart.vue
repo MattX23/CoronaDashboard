@@ -11,7 +11,7 @@
         watch: {
             chartData: function(chartData) {
                 if (chartData) {
-                    this.renderChart(chartData, this.options);
+                    this.$nextTick(() => this.renderChart(chartData, this.options))
                 }
             }
         },
