@@ -194,8 +194,8 @@
                 this.countrySearchTerm = country.search;
                 this.performNewSearch();
                 this.resetStatsBoxText();
-                this.constructChartData(false);
-                this.constructChartData(true);
+                this.$nextTick(() => this.constructChartData(false));
+                this.$nextTick(() => this.constructChartData(true));
             },
             searchByDate() {
                 this.performNewSearch();
