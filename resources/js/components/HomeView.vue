@@ -1,7 +1,7 @@
 <template>
     <div class="container">
         <div class="row">
-            <div v-if="shouldShowCountrySearchBar" class="col-6 center-col">
+            <div v-if="shouldShowCountrySearchBar" class="col-md-6 col-8 center-col">
                 <span
                     @click="closeSearchBar()"
                     id="close-country-search"
@@ -22,7 +22,7 @@
                     </option>
                 </select>
             </div>
-            <div v-if="shouldShowDateBar" class="col-4 center-col">
+            <div v-if="shouldShowDateBar" class="col-md-4 col-8 center-col">
                 <span
                     @click="closeSearchBar()"
                     id="close-date-search"

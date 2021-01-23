@@ -1,7 +1,7 @@
 <template>
     <div class="container-fluid">
         <div class="row">
-            <div class="col-12 navbar-container">
+            <div class="col-12 navbar-container text-center">
                 <span class="nav-item" @click="showSearchBar">Country Search</span>
                 <span class="nav-item" @click="showDateBar">Date Search</span>
                 <span class="nav-item" @click="showWorldWideStats">World Wide</span>
@@ -36,7 +36,7 @@ export default {
 }
 .nav-item {
     cursor: pointer;
-    margin-left: 20px;
+    margin: 0 10px;
     font-size: 1rem;
 }
 </style>
