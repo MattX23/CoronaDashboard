@@ -181,7 +181,6 @@
                     .then(response => this.countries = response.data);
             },
             getStats() {
-                console.log(this.countrySearchTerm, this.targetDate);
                 axios.get(`${GET_STATS}${this.countrySearchTerm}/${this.targetDate}`)
                     .then(response => this.setProperties(response))
                     .then(() => this.chartData = this.constructChartData(true))
