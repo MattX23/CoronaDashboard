@@ -66,6 +66,7 @@ class Location extends Model
             )
                 ->map(fn(string $country) => str_contains($country, '&') ? '' : $country)
                 ->reject(fn(string $country) => !$country)
+                ->reject(fn(string $country) => str_ends_with($country, '-'))
                 ->push(self::WORLD_WIDE)
                 ->toArray();
         });
