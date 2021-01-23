@@ -184,9 +184,7 @@
             getStats() {
                 axios.get(`${GET_STATS}${this.countrySearchTerm}/${this.targetDate}`)
                     .then(response => this.setProperties(response))
-                    .then(() => {
-                        this.$nextTick(() => this.chartData = this.constructChartData(true))
-                    })
+                    .then(() => this.$nextTick(() => this.chartData = this.constructChartData(true)))
                     .then(() => this.setMainStats())
                     .finally(() => this.isLoading = false);
             },
@@ -196,6 +194,8 @@
                 this.countrySearchTerm = country.search;
                 this.performNewSearch();
                 this.resetStatsBoxText();
+                this.constructChartData(false);
+                this.constructChartData(true);
             },
             searchByDate() {
                 this.performNewSearch();
@@ -330,7 +330,6 @@
                 const secondaryBtn = document.querySelector('[data-updates]');
                 this.toggleBtnClass(totalsBtn, true);
                 this.toggleBtnClass(secondaryBtn, false);
-                this.constructChartData(true);
             },
             closeSearchBar() {
                 this.shouldShowCountrySearchBar = false;
