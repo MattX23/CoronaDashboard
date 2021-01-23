@@ -85,7 +85,7 @@
     } from "../helpers/stats";
 
     const GET_STATS = '/api/statistics/';
-    const GET_COUNTRIES = '/api/countries/';
+    const GET_COUNTRIES = '/api/countries';
 
     export default {
         props: {
