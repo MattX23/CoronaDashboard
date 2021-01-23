@@ -19,6 +19,8 @@ class PageController extends Controller
         $searchName = $countryName !== Location::WORLD_WIDE ? Location::formatCountryName($countryName) : Location::ALL;
         $code = $location && $countryName !== Location::WORLD_WIDE ? $location->countryCode : self::ALL;
 
+        dd(Cache::get('country-code-spain'));
+
         if ($location && $countryName) {
             Cache::rememberForever("country-code-$countryName", function() use ($location) {
                 return $location->countryCode;
