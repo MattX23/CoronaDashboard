@@ -32,7 +32,7 @@
             </div>
             <div class="col-12 text-center margin-bottom">
                 <img v-if="countryCode && countryCode !== 'all'" id="country-flag" :src="flagPath" width="64" height="64" :alt="countryName">
-                <img v-if="countrySearchTerm === 'all'" id="globe" src="/images/globe-icon.png" width="64" height="64" alt="World Icon">
+                <img v-if="countryCode === 'all'" id="globe" src="/images/globe-icon.png" width="64" height="64" alt="World Icon">
                 <div class="text-center country-name margin-bottom">{{ countryName }}</div>
                 <stats-buttons
                     :current="current"

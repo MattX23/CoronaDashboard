@@ -15,7 +15,7 @@ class Location extends Model
     const COUNTRY_CODE_ENDPOINT = "https://restcountries.eu/rest/v2/name/";
     const FULL_TEXT_SEARCH = '?fullText=true';
     const WORLD_WIDE = 'World Wide';
-    const ALL = 'All';
+    const ALL = 'all';
 
     /**
      * @return bool|\Stevebauman\Location\Position|null
