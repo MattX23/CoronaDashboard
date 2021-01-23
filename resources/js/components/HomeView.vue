@@ -330,6 +330,7 @@
                 const secondaryBtn = document.querySelector('[data-updates]');
                 this.toggleBtnClass(totalsBtn, true);
                 this.toggleBtnClass(secondaryBtn, false);
+                this.constructChartData(true);
             },
             closeSearchBar() {
                 this.shouldShowCountrySearchBar = false;
