@@ -303,6 +303,8 @@
                 if (e === null) {
                     this.toggleBtnClass(document.querySelector('[data-updates]'), false);
                     this.toggleBtnClass(document.querySelector('[data-totals]'), true);
+                    this.toggleBtnClass(document.querySelector('[data-updates]'), true);
+                    this.toggleBtnClass(document.querySelector('[data-totals]'), false);
                     return;
                 }
 
