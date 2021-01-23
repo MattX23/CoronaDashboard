@@ -89,15 +89,18 @@ class StatisticsController extends Controller
     /**
      * @param string $country
      *
-     * @return string|null
+     * @return string
      */
-    protected function getCountryCode(string $country): ?string
+    protected function getCountryCode(string $country): string
     {
         $countryCode = Cache::rememberForever("country-code-$country", function() use ($country) {
             return Location::getCountryCode(str_replace('-', ' ', $country));
         });
 
-        if (!$countryCode) Cache::forget("country-code-$country");
+        if (!$countryCode) {
+            Cache::forget("country-code-$country");
+            $countryCode = Location::ALL;
+        }
 
         return $countryCode;
     }
