@@ -52,14 +52,19 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-lg-8 margin-bottom">
+            <div
+                class="col-lg-8 margin-bottom"
+                :class="{ 'blur': isLoading }">
                 <bar-chart
-                    v-show="!dataUnavailable && !isLoading"
+                    v-show="!dataUnavailable"
                     :chart-data="chartData"
                     class="chart-container"
                 ></bar-chart>
             </div>
-            <div v-show="!isLoading && !dataUnavailable" class="col-lg-4 outline stats-container box-shadow">
+            <div v-show="!dataUnavailable && !firstLoad"
+                 class="col-lg-4 outline stats-container box-shadow"
+                 :class="{ 'blur': isLoading }"
+            >
                 <p class="text-center stats-header">
                     <b v-show="monthlyView" id="statsBoxMonthly">{{ monthlyChanges }}</b>
                     <b v-show="!monthlyView" id="statsBoxDaily">{{ dailyChanges }}</b>
@@ -147,6 +152,7 @@
                 },
                 dataUnavailable: false,
                 dailyChanges: null,
+                firstLoad: true,
                 isLoading: false,
                 monthlyChanges: null,
                 monthlyView: true,
@@ -186,7 +192,10 @@
                     .then(response => this.setProperties(response))
                     .then(() => this.$nextTick(() => this.chartData = this.constructChartData(true)))
                     .then(() => this.setMainStats())
-                    .finally(() => this.isLoading = false);
+                    .finally(() => {
+                        this.isLoading = false;
+                        this.firstLoad = false;
+                    });
             },
             changeCountry(country) {
                 this.countryCode = null;
