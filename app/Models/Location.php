@@ -26,6 +26,8 @@ class Location extends Model
 
         $location = LocationAccessor::get($ip);
 
+        dd($ip, $location);
+
         if (Environment::isTesting() && !$location) {
             return self::getUserLocation();
         }
