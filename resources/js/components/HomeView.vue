@@ -52,9 +52,9 @@
             </div>
         </div>
         <div class="row">
-            <div  class="col-lg-8 margin-bottom">
+            <div class="col-lg-8 margin-bottom">
                 <bar-chart
-                    v-show="!dataUnavailable"
+                    v-show="!dataUnavailable && !isLoading"
                     :chart-data="chartData"
                     class="chart-container"
                 ></bar-chart>
