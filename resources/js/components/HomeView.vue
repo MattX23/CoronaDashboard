@@ -52,7 +52,7 @@
             </div>
         </div>
         <div class="row">
-            <div v-show="!isLoading" class="col-lg-8 margin-bottom">
+            <div  class="col-lg-8 margin-bottom">
                 <bar-chart
                     v-show="!dataUnavailable"
                     :chart-data="chartData"
@@ -194,8 +194,6 @@
                 this.countrySearchTerm = country.search;
                 this.performNewSearch();
                 this.resetStatsBoxText();
-                this.$nextTick(() => this.constructChartData(false));
-                this.$nextTick(() => this.constructChartData(true));
             },
             searchByDate() {
                 this.performNewSearch();
