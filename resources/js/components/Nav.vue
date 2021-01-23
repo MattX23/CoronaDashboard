@@ -4,7 +4,7 @@
             <div class="col-12 navbar-container">
                 <span class="nav-item" @click="showSearchBar">Country Search</span>
                 <span class="nav-item" @click="showDateBar">Date Search</span>
-                <span class="nav-item">World Wide</span>
+                <span class="nav-item" @click="showWorldWideStats">World Wide</span>
             </div>
         </div>
     </div>
@@ -21,6 +21,9 @@ export default {
         },
         showDateBar() {
             EventBus.$emit('show-date-bar');
+        },
+        showWorldWideStats() {
+            EventBus.$emit('show-world-wide-stats');
         },
     }
 }

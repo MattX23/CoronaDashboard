@@ -15,5 +15,5 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('statistics/{country?}/{date?}', [StatisticsController::class, 'getStatsByCountryAndDate']);
+Route::get('statistics/{country}/{date}', [StatisticsController::class, 'getStatsByCountryAndDate']);
 Route::get('countries', [CountryController::class, 'getCountries']);

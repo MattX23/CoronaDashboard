@@ -31,7 +31,8 @@
                 <input @change="searchByDate" v-model="targetDate" type="date" id="datePicker" class="form-control date-picker" min="2020-01-01" max="">
             </div>
             <div class="col-12 text-center margin-bottom">
-                <img v-if="countryCode" id="country-flag" :src="flagPath" width="64" height="64" :alt="countryName">
+                <img v-if="countryCode && countryCode !== 'all'" id="country-flag" :src="flagPath" width="64" height="64" :alt="countryName">
+                <img v-if="countrySearchTerm === 'all'" id="globe" src="/images/globe-icon.png" width="64" height="64" alt="World Icon">
                 <div class="text-center country-name margin-bottom">{{ countryName }}</div>
                 <div v-show="!isLoading && current.population" class="text-center margin-bottom">
                     <span
@@ -141,6 +142,9 @@
                 this.shouldShowDateBar = true;
                 this.$nextTick(() => document.getElementById('datePicker').setAttribute('max', this.targetDate));
             });
+            EventBus.$on('show-world-wide-stats', () => {
+                this.changeCountry({name: 'World Wide', search: 'all'});
+            });
         },
         mounted() {
             this.countrySearchTerm = this.$props.searchName;
@@ -199,14 +203,15 @@
             getPercentage,
             fetchStatistics() {
                 this.isLoading = true;
-                this.loadStatistics();
+                this.getStats();
                 this.resetStatsBoxText();
             },
             fetchCountries() {
                 axios.get(GET_COUNTRIES)
                     .then(response => this.countries = response.data);
             },
-            loadStatistics() {
+            getStats() {
+                console.log(this.countrySearchTerm, this.targetDate);
                 axios.get(`${GET_STATS}${this.countrySearchTerm}/${this.targetDate}`)
                     .then(response => this.setProperties(response))
                     .then(() => this.chartData = this.constructChartData(true))
@@ -227,7 +232,7 @@
             },
             performNewSearch() {
                 this.isLoading = true;
-                this.loadStatistics();
+                this.getStats();
                 this.resetTotalBtn();
                 this.setMainStats();
                 this.closeSearchBar();
@@ -510,5 +515,10 @@
 .box-shadow {
     -webkit-box-shadow: 5px 7px 7px 5px rgba(0,0,0,0.47);
     box-shadow: 5px 7px 7px 5px rgba(0,0,0,0.47);
+}
+#globe {
+    position: relative;
+    bottom: 4px;
+    margin-right: 3px;
 }
 </style>
