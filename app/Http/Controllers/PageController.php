@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Cache;
 
 class PageController extends Controller
 {
-    const ALL = 'All';
+    const ALL = 'all';
 
     /**
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
