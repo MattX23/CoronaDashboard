@@ -186,6 +186,7 @@
                     .then(response => this.setProperties(response))
                     .then(() => this.chartData = this.constructChartData(true))
                     .then(() => this.setMainStats())
+                    .then(() => this.toggleTotals())
                     .finally(() => this.isLoading = false);
             },
             changeCountry(country) {
@@ -298,7 +299,13 @@
                     ]
                 }
             },
-            toggleTotals(e) {
+            toggleTotals(e = null) {
+                if (e === null) {
+                    this.toggleBtnClass(document.querySelector('[data-updates]'), false);
+                    this.toggleBtnClass(document.querySelector('[data-totals]'), true);
+                    return;
+                }
+
                 const clickedEl = e.target;
 
                 if (clickedEl.classList.contains(ACTIVE_BTN_CLASS)) return;
