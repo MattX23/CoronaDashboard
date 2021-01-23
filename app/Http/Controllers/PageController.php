@@ -7,8 +7,7 @@ use Illuminate\Support\Facades\Cache;
 
 class PageController extends Controller
 {
-    const ALL = 'ALL';
-    const GLOBAL = 'World Wide';
+    const ALL = 'All';
 
     /**
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\Contracts\View\View
@@ -16,9 +15,9 @@ class PageController extends Controller
     public function __invoke()
     {
         $location = Location::getUserLocation();
-        $countryName = Location::validateCountryName($location) ? $location->countryName : self::GLOBAL;
+        $countryName = Location::validateCountryName($location) ? $location->countryName : Location::WORLD_WIDE;
         $searchName = $countryName !== Location::WORLD_WIDE ? Location::formatCountryName($countryName) : Location::ALL;
-        $code = $location && $countryName !== self::GLOBAL ? $location->countryCode : null;
+        $code = $location && $countryName !== Location::WORLD_WIDE ? $location->countryCode : self::ALL;
 
         if ($location && $countryName) {
             Cache::rememberForever("country-code-$countryName", function() use ($location) {
