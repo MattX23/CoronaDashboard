@@ -431,10 +431,6 @@ export default {
     background: $darkRed;
     opacity: 1;
 }
-.box-shadow {
-    -webkit-box-shadow: 5px 7px 7px 5px $shadowBlack;
-    box-shadow: 5px 7px 7px 5px $shadowBlack;
-}
 #globe {
     position: relative;
     bottom: 4px;

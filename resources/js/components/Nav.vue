@@ -35,6 +35,7 @@ export default {
 .navbar-container {
     padding: 10px 0;
     background: $darkBlue;
+    border-bottom: 1px solid $semiTransparentWhite;
 }
 .nav-item {
     cursor: pointer;
