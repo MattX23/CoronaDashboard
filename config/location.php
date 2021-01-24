@@ -26,13 +26,9 @@ return [
     */
 
     'fallbacks' => [
-
         Stevebauman\Location\Drivers\IpInfo::class,
-
         Stevebauman\Location\Drivers\GeoPlugin::class,
-
         Stevebauman\Location\Drivers\MaxMind::class,
-
     ],
 
     /*
@@ -63,27 +59,18 @@ return [
     */
 
     'maxmind' => [
-
         'web' => [
-
             'enabled' => false,
-
             'user_id' => '',
-
             'license_key' => '',
-
             'options' => [
-
                 'host' => 'geoip.maxmind.com',
-
             ],
 
         ],
 
         'local' => [
-
             'path' => database_path('maxmind/GeoLite2-City.mmdb')
-
         ],
 
     ],
@@ -98,9 +85,7 @@ return [
     */
 
     'ip_api' => [
-
         'token' => env('IP_API_TOKEN'),
-
     ],
 
     /*
@@ -113,9 +98,7 @@ return [
     */
 
     'ipinfo' => [
-
         'token' => env('IPINFO_TOKEN'),
-
     ],
 
     /*
@@ -131,11 +114,8 @@ return [
     */
 
     'testing' => [
-
-        'enabled' => env('LOCATION_TESTING', false),
-
-        'ip' => '66.102.0.0',
-
+        'enabled' => false,
+        'ip' => '',
     ],
 
 ];
