@@ -8,3 +8,17 @@ body {
 .blur {
   filter: blur(4px);
 }
+a {
+  color: $white;
+  &:hover {
+      text-decoration: none;
+      color: $lightGrey;
+  }
+}
+.subtle-link {
+  color: inherit;
+}
+.box-shadow {
+  -webkit-box-shadow: 5px 7px 7px 5px $shadowBlack;
+  box-shadow: 5px 7px 7px 5px $shadowBlack;
+}

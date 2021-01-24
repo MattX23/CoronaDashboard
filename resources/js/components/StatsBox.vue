@@ -41,33 +41,33 @@
 </template>
 
 <script>
-    import {
+import {
+    formatNumber,
+    getDifference,
+    getPercentage,
+    getSymbol,
+} from "../helpers/mathematics";
+
+export default {
+    name: "StatsBox",
+    props: {
+        current: {
+            type: Object,
+        },
+        monthlyView: {
+            type: Boolean,
+        },
+        previous: {
+            type: Object,
+        }
+    },
+    methods: {
         formatNumber,
-        getDifference,
         getPercentage,
         getSymbol,
-    } from "../helpers/mathematics";
-
-    export default {
-        name: "StatsBox",
-        props: {
-            current: {
-                type: Object,
-            },
-            monthlyView: {
-                type: Boolean,
-            },
-            previous: {
-                type: Object,
-            }
-        },
-        methods: {
-            formatNumber,
-            getPercentage,
-            getSymbol,
-            getDifference,
-        }
+        getDifference,
     }
+}
 </script>
 
 <style scoped>
