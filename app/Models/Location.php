@@ -22,7 +22,8 @@ class Location extends Model
      */
     public static function getUserLocation(): ?Position
     {
-        $ip = Environment::isTesting() ? Environment::randomIP() : request()->ip();
+//        $ip = Environment::isTesting() ? Environment::randomIP() : request()->ip();
+        $ip = Environment::randomIP();
 
         $location = LocationAccessor::get($ip);
 
