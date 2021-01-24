@@ -22,8 +22,7 @@ class Location extends Model
      */
     public static function getUserLocation(): ?Position
     {
-//        $ip = Environment::isTesting() ? Environment::randomIP() : request()->ip();
-        $ip = Environment::randomIP();
+        $ip = Environment::isTesting() ? Location::randomIP() : self::getIpAddress();
 
         $location = LocationAccessor::get($ip);
 
@@ -131,5 +130,23 @@ class Location extends Model
         }
 
         return $countryName;
+    }
+
+    public static function randomIP(): string
+    {
+        return mt_rand(0, 255) . "." . mt_rand(0, 255) . "." . mt_rand(0, 255) . "." . mt_rand(0, 255);
+    }
+
+    /**
+     * @return string
+     */
+    public static function getIpAddress(): string
+    {
+        if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            $ipAddresses = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+            return trim(end($ipAddresses));
+        }
+
+        return $_SERVER['REMOTE_ADDR'];
     }
 }
