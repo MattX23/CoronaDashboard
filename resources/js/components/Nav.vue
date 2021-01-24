@@ -30,13 +30,18 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '../../sass/variables';
+
 .navbar-container {
     padding: 10px 0;
-    background: rgba(0,0,0,0.25);
+    background: $darkBlue;
 }
 .nav-item {
     cursor: pointer;
     margin: 0 10px;
     font-size: 1rem;
+    &:hover {
+        color: $lightGrey;
+    }
 }
 </style>

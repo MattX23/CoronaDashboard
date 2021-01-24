@@ -7,13 +7,14 @@ $font-size-base: 0.9rem;
 $line-height-base: 1.6;
 
 // Colors
-$blue: #3490dc;
-$indigo: #6574cd;
-$purple: #9561e2;
-$pink: #f66d9b;
-$red: #e3342f;
-$orange: #f6993f;
-$yellow: #ffed4a;
-$green: #38c172;
-$teal: #4dc0b5;
-$cyan: #6cb2eb;
+$darkBlue: rgba(0,0,0,0.25);
+$darkerBlue: #1a202c;
+$white: #fff;
+$lightGrey: #7b7878;
+$lighterGrey: #a8a8b5;
+$lightRed: #f87979;
+$darkRed: #f86661;
+$shadowBlack: rgba(0,0,0,0.47);
+
+// Sizes
+$footerHeight: 75px;

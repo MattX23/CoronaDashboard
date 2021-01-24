@@ -6,6 +6,7 @@
             :country="$props.country"
             :search-name="$props.searchName"
         ></home-view>
+        <site-footer></site-footer>
     </div>
 </template>
 <script>
@@ -21,17 +22,16 @@ export default {
         searchName: {
             type: String
         }
-    },
-    data() {
-        return {
-
-        }
     }
 };
 </script>
 
 <style lang="scss">
+@import '../../sass/variables';
+
 #main {
-    color: white;
+    color: $white;
+    position: relative;
+    min-height: 100vh;
 }
 </style>

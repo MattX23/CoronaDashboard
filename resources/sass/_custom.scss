@@ -8,3 +8,10 @@ body {
 .blur {
   filter: blur(4px);
 }
+a {
+  color: $white;
+  &:hover {
+      text-decoration: none;
+      color: $lightGrey;
+  }
+}

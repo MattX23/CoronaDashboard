@@ -36,30 +36,30 @@
 </template>
 
 <script>
-    import { formatNumber, getPercentage } from "../helpers/mathematics";
-    import { setMainStats, setStatsText, toggleClass } from "../helpers/stats";
+import { formatNumber, getPercentage } from "../helpers/mathematics";
+import { setMainStats, setStatsText, toggleClass } from "../helpers/stats";
 
-    export default {
-        name: "StatsButtons",
-        props: {
-            current: {
-                type: Object
-            },
-            countryName: {
-                type: String
-            },
-            isLoading: {
-                type: Boolean
-            }
+export default {
+    name: "StatsButtons",
+    props: {
+        current: {
+            type: Object
         },
-        methods: {
-            formatNumber,
-            getPercentage,
-            setMainStats,
-            setStatsText,
-            toggleClass,
+        countryName: {
+            type: String
+        },
+        isLoading: {
+            type: Boolean
         }
+    },
+    methods: {
+        formatNumber,
+        getPercentage,
+        setMainStats,
+        setStatsText,
+        toggleClass,
     }
+}
 </script>
 
 <style scoped>

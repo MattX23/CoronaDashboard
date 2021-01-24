@@ -80,283 +80,286 @@
 </template>
 
 <script>
-    import {EventBus} from "../eventbus/event-bus";
-    import { formatNumber, getPercentage } from "../helpers/mathematics";
-    import {
+import {EventBus} from "../eventbus/event-bus";
+import { formatNumber, getPercentage } from "../helpers/mathematics";
+import {
+    setMainStats,
+    setStatsText,
+    toggleClass,
+    ACTIVE_BTN_CLASS,
+    SECONDARY_BTN_CLASS
+} from "../helpers/stats";
+
+const GET_STATS = '/api/statistics/';
+const GET_COUNTRIES = '/api/countries';
+
+export default {
+    props: {
+        code: {
+            type: String
+        },
+        country: {
+            type: String
+        },
+        searchName: {
+            type: String
+        }
+    },
+    created() {
+        EventBus.$on('show-search-bar', () => {
+            this.closeSearchBar();
+            this.shouldShowCountrySearchBar = true;
+        });
+        EventBus.$on('show-date-bar', () => {
+            this.closeSearchBar();
+            this.shouldShowDateBar = true;
+            this.$nextTick(() => document.getElementById('datePicker').setAttribute('max', this.targetDate));
+        });
+        EventBus.$on('show-world-wide-stats', () => {
+            this.changeCountry({name: 'World Wide', search: 'all'});
+        });
+    },
+    mounted() {
+        this.countrySearchTerm = this.$props.searchName;
+        this.countryName = this.$props.country;
+        this.countryCode = this.$props.code;
+        this.targetDate = this.getLocalDateAsString();
+        this.fetchStatistics();
+        this.fetchCountries();
+    },
+    computed: {
+        flagPath() {
+            return this.countryCode ? `https://www.countryflags.io/${this.countryCode}/shiny/64.png` : '';
+        }
+    },
+    data() {
+        return {
+            chartData: {},
+            countries: [],
+            countryCode: null,
+            countryName: null,
+            countrySearchTerm: null,
+            current: {
+                activeCases: null,
+                critical: null,
+                date: null,
+                newCases: null,
+                newDeaths: null,
+                population: null,
+                recovered: null,
+                totalCases: null,
+                totalDeaths: null,
+            },
+            dataUnavailable: false,
+            dailyChanges: null,
+            firstLoad: true,
+            isLoading: false,
+            monthlyChanges: null,
+            monthlyView: true,
+            previous: {
+                activeCases: null,
+                critical: null,
+                date: null,
+                newCases: null,
+                newDeaths: null,
+                recovered: null,
+                totalCases: null,
+                totalDeaths: null,
+            },
+            selectedCountry: null,
+            shouldShowCountrySearchBar: false,
+            shouldShowDateBar: false,
+            targetDate: null,
+        }
+    },
+    methods: {
+        formatNumber,
+        getPercentage,
         setMainStats,
         setStatsText,
         toggleClass,
-        ACTIVE_BTN_CLASS,
-        SECONDARY_BTN_CLASS
-    } from "../helpers/stats";
+        fetchStatistics() {
+            this.isLoading = true;
+            this.getStats();
+            this.resetStatsBoxText();
+        },
+        fetchCountries() {
+            axios.get(GET_COUNTRIES)
+                .then(response => this.countries = response.data);
+        },
+        getStats() {
+            axios.get(`${GET_STATS}${this.countrySearchTerm}/${this.targetDate}`)
+                .then(response => this.setProperties(response))
+                .then(() => this.$nextTick(() => this.chartData = this.constructChartData(true)))
+                .then(() => this.setMainStats())
+                .finally(() => {
+                    this.isLoading = false;
+                    this.firstLoad = false;
+                });
+        },
+        changeCountry(country) {
+            this.countryCode = null;
+            this.countryName = country.name;
+            this.countrySearchTerm = country.search;
+            this.performNewSearch();
+            this.resetStatsBoxText();
+        },
+        searchByDate() {
+            this.performNewSearch();
+            this.monthlyChanges = `Changes since ${this.targetDate}`;
+            this.dailyChanges = `Daily changes: ${this.targetDate} vs Today`;
+        },
+        performNewSearch() {
+            this.isLoading = true;
+            this.getStats();
+            this.resetTotalBtn();
+            this.setMainStats();
+            this.closeSearchBar();
+        },
+        resetStatsBoxText() {
+            this.monthlyChanges = `Changes over the last month`;
+            this.dailyChanges = `Daily changes month-on-month`;
+        },
+        setProperties(response) {
+            this.current.activeCases = response.data.current.activeCases;
+            this.current.totalDeaths = response.data.current.totalDeaths;
+            this.current.recovered = response.data.current.recovered;
+            this.current.totalCases = response.data.current.totalCases;
+            this.current.critical = response.data.current.critical;
+            this.current.newDeaths = response.data.current.newDeaths;
+            this.current.newCases = response.data.current.newCases;
+            this.current.date = response.data.current.date;
+            this.current.population = response.data.current.population;
 
-    const GET_STATS = '/api/statistics/';
-    const GET_COUNTRIES = '/api/countries';
+            this.countryCode = response.data.countryCode;
 
-    export default {
-        props: {
-            code: {
-                type: String
-            },
-            country: {
-                type: String
-            },
-            searchName: {
-                type: String
-            }
+            this.previous.activeCases = response.data.previous.activeCases;
+            this.previous.totalDeaths = response.data.previous.totalDeaths;
+            this.previous.recovered = response.data.previous.recovered;
+            this.previous.totalCases = response.data.previous.totalCases;
+            this.previous.critical = response.data.previous.critical;
+            this.previous.newDeaths = response.data.previous.newDeaths;
+            this.previous.newCases = response.data.previous.newCases;
+            this.previous.date = response.data.previous.date;
         },
-        created() {
-            EventBus.$on('show-search-bar', () => {
-                this.closeSearchBar();
-                this.shouldShowCountrySearchBar = true;
+        constructChartData(showTotals) {
+            this.dataUnavailable = false;
+            this.monthlyView = showTotals;
+
+            const currentStats = showTotals ?
+                {
+                    'Deaths': this.current.totalDeaths,
+                    'Active Cases': this.current.activeCases,
+                    'Critical': this.current.critical,
+                    'Recovered': this.current.recovered,
+                    'Total Cases': this.current.totalCases,
+                } :
+                {
+                    'Deaths': this.current.newDeaths,
+                    'New Cases': this.current.newCases,
+                };
+
+            const lastMonthStats = showTotals ?
+                {
+                    'Deaths': this.previous.totalDeaths,
+                    'Active Cases': this.previous.activeCases,
+                    'Critical': this.previous.critical,
+                    'Recovered': this.previous.recovered,
+                    'Total Cases': this.previous.totalCases,
+                } :
+                {
+                    'Deaths': this.previous.newDeaths,
+                    'New Cases': this.previous.newCases,
+                };
+
+            const labels = [];
+            const currentData = [];
+            const lastMonthData = [];
+
+            Object.entries(currentStats).forEach(([key, value]) => {
+                if (value && lastMonthStats[key]) {
+                    labels.push(key);
+                    currentData.push(value);
+                }
             });
-            EventBus.$on('show-date-bar', () => {
-                this.closeSearchBar();
-                this.shouldShowDateBar = true;
-                this.$nextTick(() => document.getElementById('datePicker').setAttribute('max', this.targetDate));
+
+            if (currentData.length < 1) this.dataUnavailable = true;
+
+            Object.entries(lastMonthStats).forEach(([key, value]) => {
+                if (currentStats[key] && value) {
+                    lastMonthData.push(value);
+                }
             });
-            EventBus.$on('show-world-wide-stats', () => {
-                this.changeCountry({name: 'World Wide', search: 'all'});
-            });
-        },
-        mounted() {
-            this.countrySearchTerm = this.$props.searchName;
-            this.countryName = this.$props.country;
-            this.countryCode = this.$props.code;
-            this.targetDate = this.getLocalDateAsString();
-            this.fetchStatistics();
-            this.fetchCountries();
-        },
-        computed: {
-            flagPath() {
-                return this.countryCode ? `https://www.countryflags.io/${this.countryCode}/shiny/64.png` : '';
-            }
-        },
-        data() {
+
             return {
-                chartData: {},
-                countries: [],
-                countryCode: null,
-                countryName: null,
-                countrySearchTerm: null,
-                current: {
-                    activeCases: null,
-                    critical: null,
-                    date: null,
-                    newCases: null,
-                    newDeaths: null,
-                    population: null,
-                    recovered: null,
-                    totalCases: null,
-                    totalDeaths: null,
-                },
-                dataUnavailable: false,
-                dailyChanges: null,
-                firstLoad: true,
-                isLoading: false,
-                monthlyChanges: null,
-                monthlyView: true,
-                previous: {
-                    activeCases: null,
-                    critical: null,
-                    date: null,
-                    newCases: null,
-                    newDeaths: null,
-                    recovered: null,
-                    totalCases: null,
-                    totalDeaths: null,
-                },
-                selectedCountry: null,
-                shouldShowCountrySearchBar: false,
-                shouldShowDateBar: false,
-                targetDate: null,
+                labels: labels,
+                datasets: [
+                    {
+                        label: showTotals ? `Totals on ${this.previous.date}` : `Daily figures on ${this.previous.date}`,
+                        backgroundColor: '#fff',
+                        data: lastMonthData
+                    },
+                    {
+                        label: showTotals ? 'Totals as of today' : 'Daily Figures as of today',
+                        backgroundColor: '#f87979',
+                        data: currentData
+                    }
+                ]
             }
         },
-        methods: {
-            formatNumber,
-            getPercentage,
-            setMainStats,
-            setStatsText,
-            toggleClass,
-            fetchStatistics() {
-                this.isLoading = true;
-                this.getStats();
-                this.resetStatsBoxText();
-            },
-            fetchCountries() {
-                axios.get(GET_COUNTRIES)
-                    .then(response => this.countries = response.data);
-            },
-            getStats() {
-                axios.get(`${GET_STATS}${this.countrySearchTerm}/${this.targetDate}`)
-                    .then(response => this.setProperties(response))
-                    .then(() => this.$nextTick(() => this.chartData = this.constructChartData(true)))
-                    .then(() => this.setMainStats())
-                    .finally(() => {
-                        this.isLoading = false;
-                        this.firstLoad = false;
-                    });
-            },
-            changeCountry(country) {
-                this.countryCode = null;
-                this.countryName = country.name;
-                this.countrySearchTerm = country.search;
-                this.performNewSearch();
-                this.resetStatsBoxText();
-            },
-            searchByDate() {
-                this.performNewSearch();
-                this.monthlyChanges = `Changes since ${this.targetDate}`;
-                this.dailyChanges = `Daily changes: ${this.targetDate} vs Today`;
-            },
-            performNewSearch() {
-                this.isLoading = true;
-                this.getStats();
-                this.resetTotalBtn();
-                this.setMainStats();
-                this.closeSearchBar();
-            },
-            resetStatsBoxText() {
-                this.monthlyChanges = `Changes over the last month`;
-                this.dailyChanges = `Daily changes month-on-month`;
-            },
-            setProperties(response) {
-                this.current.activeCases = response.data.current.activeCases;
-                this.current.totalDeaths = response.data.current.totalDeaths;
-                this.current.recovered = response.data.current.recovered;
-                this.current.totalCases = response.data.current.totalCases;
-                this.current.critical = response.data.current.critical;
-                this.current.newDeaths = response.data.current.newDeaths;
-                this.current.newCases = response.data.current.newCases;
-                this.current.date = response.data.current.date;
-                this.current.population = response.data.current.population;
+        toggleTotals(e) {
+            const clickedEl = e.target;
 
-                this.countryCode = response.data.countryCode;
+            if (clickedEl.classList.contains(ACTIVE_BTN_CLASS)) return;
 
-                this.previous.activeCases = response.data.previous.activeCases;
-                this.previous.totalDeaths = response.data.previous.totalDeaths;
-                this.previous.recovered = response.data.previous.recovered;
-                this.previous.totalCases = response.data.previous.totalCases;
-                this.previous.critical = response.data.previous.critical;
-                this.previous.newDeaths = response.data.previous.newDeaths;
-                this.previous.newCases = response.data.previous.newCases;
-                this.previous.date = response.data.previous.date;
-            },
-            constructChartData(showTotals) {
-                this.dataUnavailable = false;
-                this.monthlyView = showTotals;
+            const showTotals = clickedEl.dataset.totals !== undefined;
+            const secondaryBtn = showTotals ? document.querySelector('[data-updates]') : document.querySelector('[data-totals]');
+            this.toggleBtnClass(secondaryBtn, false);
+            this.toggleBtnClass(clickedEl, true);
 
-                const currentStats = showTotals ?
-                    {
-                        'Deaths': this.current.totalDeaths,
-                        'Active Cases': this.current.activeCases,
-                        'Critical': this.current.critical,
-                        'Recovered': this.current.recovered,
-                        'Total Cases': this.current.totalCases,
-                    } :
-                    {
-                        'Deaths': this.current.newDeaths,
-                        'New Cases': this.current.newCases,
-                    };
-
-                const lastMonthStats = showTotals ?
-                    {
-                        'Deaths': this.previous.totalDeaths,
-                        'Active Cases': this.previous.activeCases,
-                        'Critical': this.previous.critical,
-                        'Recovered': this.previous.recovered,
-                        'Total Cases': this.previous.totalCases,
-                    } :
-                    {
-                        'Deaths': this.previous.newDeaths,
-                        'New Cases': this.previous.newCases,
-                    };
-
-                const labels = [];
-                const currentData = [];
-                const lastMonthData = [];
-
-                Object.entries(currentStats).forEach(([key, value]) => {
-                    if (value && lastMonthStats[key]) {
-                        labels.push(key);
-                        currentData.push(value);
-                    }
-                });
-
-                if (currentData.length < 1) this.dataUnavailable = true;
-
-                Object.entries(lastMonthStats).forEach(([key, value]) => {
-                    if (currentStats[key] && value) {
-                        lastMonthData.push(value);
-                    }
-                });
-
-                return {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: showTotals ? `Totals on ${this.previous.date}` : `Daily figures on ${this.previous.date}`,
-                            backgroundColor: '#fff',
-                            data: lastMonthData
-                        },
-                        {
-                            label: showTotals ? 'Totals as of today' : 'Daily Figures as of today',
-                            backgroundColor: '#f87979',
-                            data: currentData
-                        }
-                    ]
-                }
-            },
-            toggleTotals(e) {
-                const clickedEl = e.target;
-
-                if (clickedEl.classList.contains(ACTIVE_BTN_CLASS)) return;
-
-                const showTotals = clickedEl.dataset.totals !== undefined;
-                const secondaryBtn = showTotals ? document.querySelector('[data-updates]') : document.querySelector('[data-totals]');
-                this.toggleBtnClass(secondaryBtn, false);
-                this.toggleBtnClass(clickedEl, true);
-
-                this.chartData = this.constructChartData(showTotals);
-            },
-            toggleBtnClass(el, shouldBeActive) {
-                shouldBeActive ?
-                    this.toggleClass(el, SECONDARY_BTN_CLASS, ACTIVE_BTN_CLASS) :
-                    this.toggleClass(el, ACTIVE_BTN_CLASS, SECONDARY_BTN_CLASS);
-            },
-            getSymbol(num) {
-                if (num > 0) {
-                    return '+';
-                }
-            },
-            getDifference(x, y) {
-                return x - y;
-            },
-            resetTotalBtn() {
-                const totalsBtn = document.querySelector('[data-totals]');
-                const secondaryBtn = document.querySelector('[data-updates]');
-                this.toggleBtnClass(totalsBtn, true);
-                this.toggleBtnClass(secondaryBtn, false);
-            },
-            closeSearchBar() {
-                this.shouldShowCountrySearchBar = false;
-                this.shouldShowDateBar = false;
-            },
-            getLocalDateAsString() {
-                const date = new Date();
-                const offsetMs = date.getTimezoneOffset() * 60 * 1000;
-                const dateLocal = new Date(date.getTime() - offsetMs);
-
-                return dateLocal.toISOString().slice(0, 10).replace(/-/g, "-").replace("T", " ");
+            this.chartData = this.constructChartData(showTotals);
+        },
+        toggleBtnClass(el, shouldBeActive) {
+            shouldBeActive ?
+                this.toggleClass(el, SECONDARY_BTN_CLASS, ACTIVE_BTN_CLASS) :
+                this.toggleClass(el, ACTIVE_BTN_CLASS, SECONDARY_BTN_CLASS);
+        },
+        getSymbol(num) {
+            if (num > 0) {
+                return '+';
             }
         },
+        getDifference(x, y) {
+            return x - y;
+        },
+        resetTotalBtn() {
+            const totalsBtn = document.querySelector('[data-totals]');
+            const secondaryBtn = document.querySelector('[data-updates]');
+            this.toggleBtnClass(totalsBtn, true);
+            this.toggleBtnClass(secondaryBtn, false);
+        },
+        closeSearchBar() {
+            this.shouldShowCountrySearchBar = false;
+            this.shouldShowDateBar = false;
+        },
+        getLocalDateAsString() {
+            const date = new Date();
+            const offsetMs = date.getTimezoneOffset() * 60 * 1000;
+            const dateLocal = new Date(date.getTime() - offsetMs);
+
+            return dateLocal.toISOString().slice(0, 10).replace(/-/g, "-").replace("T", " ");
+        }
     }
+}
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+@import '../../sass/variables';
+
 .container {
     position: relative;
-    top: 3vh;
+    margin-top: 20px;
+    padding-bottom: $footerHeight;
 }
 #country-flag {
     display: inline-block;
@@ -376,11 +379,11 @@
     font-style: italic;
 }
 .alert-light {
-    color: #a8a8b5;
+    color: $lighterGrey;
     background-color: transparent;
 }
 .outline {
-    border: 1px solid white;
+    border: 1px solid $white;
     border-radius: 5px;
     padding: 10px;
     margin-bottom: 25px;
@@ -395,11 +398,11 @@
     background: white;
     margin: -10px -10px -5px;
     height: 45px;
-    color: #1a202c;
+    color: $darkerBlue;
     padding-top: 10px;
 }
 .light-box-shadow {
-    box-shadow: 5px 7px 7px 5px rgba(0,0,0,0.25);
+    box-shadow: 5px 7px 7px 5px $darkBlue;
 }
 .country-select {
     margin: auto;
@@ -412,25 +415,25 @@
 }
 .close-btn {
     position: absolute;
-    background: #f87979;
+    background: $lightRed;
     padding: 10px;
     border-radius: 100px;
     height: 30px;
     line-height: 11px;
     bottom: 24px;
-    color: white;
+    color: $white;
     font-weight: bold;
     cursor: pointer;
     opacity: 0.85;
     right: -5px;
 }
 .close-btn:hover {
-    background: #f86661;
+    background: $darkRed;
     opacity: 1;
 }
 .box-shadow {
-    -webkit-box-shadow: 5px 7px 7px 5px rgba(0,0,0,0.47);
-    box-shadow: 5px 7px 7px 5px rgba(0,0,0,0.47);
+    -webkit-box-shadow: 5px 7px 7px 5px $shadowBlack;
+    box-shadow: 5px 7px 7px 5px $shadowBlack;
 }
 #globe {
     position: relative;
