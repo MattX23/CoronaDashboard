@@ -16,3 +16,5 @@ const app = new Vue({
     el: '#app',
     components: { App }
 });
+
+Vue.config.devtools = false;
